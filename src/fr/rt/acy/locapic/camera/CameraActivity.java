@@ -1,21 +1,3 @@
-/**
- * @author Virgile BEGUIN 
- * 
- * http://www.tutos-android.com/actionbar-menu-android-partie-2
- * http://fearyourself.developpez.com/tutoriel/sdl/morpion/part6/
- * 
- * doc camera
- * http://developer.android.com/training/camera/cameradirect.html
- * http://developer.android.com/guide/topics/media/camera.html
- * http://acesyde.developpez.com/tutoriels/android/appareil-photo-android/
- * 
- * http://code.tutsplus.com/tutorials/using-the-accelerometer-on-android--mobile-22125
- * 
- * foc capteuret graphisme 2d http://mathias-seguy.developpez.com/cours/android/android-capteurs/
- *
- * exemple camera
- * https://github.com/josnidhin/Android-Camera-Example/blob/master/src/com/example/cam/CamTestActivity.java
- */
 
 package fr.rt.acy.locapic.camera;
 
@@ -45,7 +27,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -69,10 +54,11 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private Camera camera;                  // Camera utillisee
 	private PreviewCamera previewCamera;    // preview de la camera
 	private ImageButton fastSettings;       // bouton fastSettings (activation du flash, retardateur, ...)
-    private ZoomControls zoomControls;
-    private int currentZoom = 0;
-    private int maxZoom = 0;
-
+    private ZoomControls zoomControls;		// bouton de control du zoom
+    private int currentZoom = 0;			// niveau de zoom actuel
+    private int maxZoom = 0;				// niveau de zoom maximum. Affecte dans le onCreate
+    private boolean isZoomSupported = false;
+    
 	// Capteurs
 	private SensorManager sensorManager;    // gere les capteurs du telephone
 	private Sensor accelSensor;             // accelerometre
@@ -80,7 +66,7 @@ public class CameraActivity extends Activity implements SensorEventListener
 	
 	// Vecteur utillise par getRotationMatrix dans onSensorChanged pour obtenir une matrisse de rotation.
 	private float[] accelVector = new float[3]; // vecteur gravite
-	private float[] magnVector = new float[3]; // vecteur champ magnetique
+	private float[] magnVector = new float[3]; 	// vecteur champ magnetique
 	
 	/*
 	 * Orientation du telephone en degree. De 0 a 180 -> 90 = telephone vertical, 
@@ -93,8 +79,8 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private float azimute;
 	
 	// Options camera :
-	private Flash flashMode = Flash.AUTO;   // Mode du flash et valeur par defaut
-	private int retardateur = 0;            // Retardateur en secondes (0 par defaut)
+	private Flash flashMode = Flash.AUTO;   	// Mode du flash et valeur par defaut
+	private int retardateur = 0;            	// Retardateur en secondes (0 par defaut)
 	private List<Size> supportedPictureSizes; 	// Taille de l'appareil photo supporte
 	
     @Override
@@ -104,7 +90,7 @@ public class CameraActivity extends Activity implements SensorEventListener
         setContentView(R.layout.activity_camera);
 
         // Mettre l'activite en plein ecran
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         // On active la camera par defaut
         try 
@@ -121,7 +107,7 @@ public class CameraActivity extends Activity implements SensorEventListener
         Parameters params = camera.getParameters();
         params.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         maxZoom = params.getMaxZoom();                                  // Recuperer le zoom maximum
-        boolean isZoomSupported = params.isZoomSupported();
+        isZoomSupported = params.isZoomSupported();
         supportedPictureSizes = params.getSupportedPictureSizes();		// Recuperer les taille de camera supporte
         camera.setParameters(params);
         
@@ -172,7 +158,8 @@ public class CameraActivity extends Activity implements SensorEventListener
                         zoomControls.setIsZoomOutEnabled(false);
                         currentZoom = 0;
                     }
-
+                    
+                    // Affecter le niveau de zoom
                     Camera.Parameters params = camera.getParameters();
                     params.setZoom(currentZoom);
                     camera.setParameters(params);
@@ -181,6 +168,7 @@ public class CameraActivity extends Activity implements SensorEventListener
         }
         else
         {
+        	// Si le zoom n'est pas supporté, faire disparaitre les boutons du zoom
             zoomControls.setVisibility(View.GONE);
             Toast.makeText(this, R.string.zoomNotSupported, Toast.LENGTH_LONG).show();
         }
@@ -247,7 +235,6 @@ public class CameraActivity extends Activity implements SensorEventListener
     		
     		camera.setParameters(param);
     	}
-    	
     	super.onActivityResult(requestCode, resultCode, data);
     }
     
@@ -391,6 +378,26 @@ public class CameraActivity extends Activity implements SensorEventListener
             resetCamera(camera);    // On redemarre le preview
         }
     };
+    
+    private void setZoom(int zoom)
+    {
+    	if (isZoomSupported)
+        {
+    		if (zoom >= maxZoom)
+    		{
+    			zoom = maxZoom;
+    		}
+
+			currentZoom = zoom;
+    		Camera.Parameters params = camera.getParameters();
+    		params.setZoom(zoom);
+    		camera.setParameters(params);
+        }
+        else
+        {
+            Toast.makeText(this, R.string.zoomNotSupported, Toast.LENGTH_LONG).show();
+        }
+    }
 
     /**
      * Fonction permetant d'appele showFastSettingsDialog() depuis xml (onClick)
@@ -462,10 +469,8 @@ public class CameraActivity extends Activity implements SensorEventListener
             else
                 ei.setAttribute(ExifInterface.TAG_ORIENTATION, Integer.toString(ExifInterface.ORIENTATION_ROTATE_180));
 
-            // on enregistre les metadonnees
-            ei.saveAttributes();
-
-            readMetadata(); //on affiche les metadonnees precedement creer pour le debugage
+            ei.saveAttributes();	// Enregistrer les metadonnees
+            readMetadata(); 		// Afficher les metadonnees precedement creer pour le debugage
         }
         else
         {

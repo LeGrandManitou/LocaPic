@@ -1,9 +1,7 @@
 package fr.rt.acy.locapic.camera;
 
-import fr.rt.acy.locapic.R;
 import android.app.Activity;
 import android.content.Intent;
-import android.hardware.Camera.Size;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -13,6 +11,7 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 import android.widget.TextView;
+import fr.rt.acy.locapic.R;
 
 /**
  * Popup avec parametre rapide (flash ...)
