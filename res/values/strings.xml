@@ -4,5 +4,29 @@
     <string name="app_name">LocaPic</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="camera">Camera</string>
+	<string name="itineraire">Itineraire</string>
+	
+	<string name="prendrePhoto">Take picture</string>
+    <string name="takePicture">Take a picture</string>
+    <string name="settings">Settings</string>
+    <string name="quit">Quit</string>
+    <string name="format_date">MMddyyyy_HHmmss</string>
+    <string name="flash">Flash</string>
+    <string name="flashAuto">Auto Flash</string>
+    <string name="retardateur">Timer</string>
+    <string name="retardateur_temps_titre">Timer :</string>
+    <string name="zoom">Zoom</string>
 
+    <string name="title_activity_take_picture" translatable="false">TakePictureActivity</string>
+    <string name="title_activity_fast_settings" translatable="false">FastSettingsActivity</string>
+    
+    <string-array name="flashMode">
+        <item>AUTO</item>
+        <item>ON</item>
+        <item>OFF</item>
+    </string-array>
+    <string name="zoomNotSupported">Zoom functionality is not supported !</string>
+    <string name="scene">Scene :</string>
+    
 </resources>

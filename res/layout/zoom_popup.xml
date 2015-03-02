@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    android:orientation="vertical" >
+    
+    <ImageButton 
+        android:id="@+id/zoomPlus"
+        android:onClick=""
+		android:layout_height="match_parent" 
+		android:layout_width="match_parent"
+		android:layout_weight="1"
+		android:src="@drawable/ic_action_collapse"
+		android:contentDescription="@string/zoom"/>
+    
+    <ImageButton 
+        android:id="@+id/zoomMoins"
+        android:onClick=""
+		android:layout_height="match_parent" 
+		android:layout_width="match_parent"
+		android:layout_weight="1"
+		android:src="@drawable/ic_action_expand"
+		android:contentDescription="@string/zoom"/>
+
+</LinearLayout>
