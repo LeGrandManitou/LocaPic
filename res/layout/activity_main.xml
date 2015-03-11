@@ -17,9 +17,9 @@
         android:onClick="startCamera" />
     
     <Button 
-        android:id="@+id/main_button_itineraire"
+        android:id="@+id/main_button_tracking"
        	android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/itineraire" />
+        android:text="@string/button_tracking_off" />
 
 </LinearLayout>

@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ App ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
     <string name="app_name">LocaPic</string>
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
-    <string name="camera">Camera</string>
-	<string name="itineraire">Itineraire</string>
+    <string name="action_settings">Réglages</string>
+    <string name="camera">Appareil photo</string>
+	<string name="itineraire">Itinéraire</string>
 	
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Camera ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<string name="prendrePhoto">Take picture</string>
     <string name="takePicture">Take a picture</string>
     <string name="settings">Settings</string>
@@ -42,4 +44,8 @@
 	<string name="settings_gps_notif_title">Autoriser les notifications</string>
 	<string name="settings_gps_notif_summary">Utiliser les notifications :</string>
     
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ GPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<string name="button_tracking_off">Lancer l\'itinéraire</string>
+	<string name="button_tracking_on">Arrêter l\'itinéraire</string>
+	<string name="toast_gps_off">Vous devez activer le GPS pour enregistrer un itineraire.</string>
 </resources>

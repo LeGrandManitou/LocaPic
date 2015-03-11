@@ -80,9 +80,7 @@ public class TrackService extends Service
 	}
 	
 	/**
-	 * 
 	 * @author Samuel
-	 *
 	 */
 	private class NmeaGpgsaListener implements android.location.GpsStatus.NmeaListener {
 		@Override
@@ -95,9 +93,7 @@ public class TrackService extends Service
 	}
 	
 	/**
-	 * 
 	 * @author Samuel
-	 *
 	 */
 	private class LocationListener implements android.location.LocationListener, android.location.GpsStatus.NmeaListener{
 		Location mLastLocation;

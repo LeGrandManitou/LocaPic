@@ -30,15 +30,15 @@ public class MainActivity extends Activity
 {
 	private final String DEBUG_AUTO_START_INITENT = ""; // "camera" pour lancer automatiquement la camera
 	private Intent prefIntent;
-	private boolean recording2 = false;
+	private final String TAG = "HOME";
+	private SharedPreferences pref;
+	private boolean useNetworkPref = false;
+	private boolean notifPref = false;
+	private Button button_tracking = null;
+	private boolean tracking = false;
 	private LocationManager lm = null;
 	private final String GPX_BASE = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n<gpx version=\"1.1\">\n\t<metadata>\n\t\t<name>Android GPS receiver track</name>\n\t\t<desc>GPS track logged on an Android device with an application from a project by Samuel Beaurepaire &amp; Virgile Beguin for IUT of Annecy (Fr), RT departement.</desc>\n\t\t<time></time>\n\t\t<author>\n\t\t\t<name>Samuel Beaurepaire</name>\n\t\t\t<email id=\"sjbeaurepaire\" domain=\"orange.fr\" />\n\t\t</author>\n\t\t<keywords></keywords>\n\t</metadata>\n\n\t<trk>\n\t</trk>\n</gpx>";
 	private final String FILES_DIR = Environment.getExternalStorageDirectory().getPath() + "/TracesGPS/";
-	private final String TAG = "GPS";
-	private SharedPreferences pref;
-	private Button goiti2 = null;
-	private boolean useNetworkPref = false;
-	private boolean notifPref = false;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) 
@@ -49,8 +49,8 @@ public class MainActivity extends Activity
         if (DEBUG_AUTO_START_INITENT.equals("camera")) 
         	startCamera(null);
             
-        goiti2 = (Button) findViewById(R.id.main_button_itineraire);
-        goiti2.setOnClickListener(goiti2Listener);
+        button_tracking = (Button) findViewById(R.id.main_button_tracking);
+        button_tracking.setOnClickListener(trackingButtonListener);
     }
     
     @Override
@@ -61,12 +61,11 @@ public class MainActivity extends Activity
 		lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 		// Gestion des preferences
 		pref = PreferenceManager.getDefaultSharedPreferences(this);
-		recording2 = pref.getBoolean("RECORDING2", false);
+		tracking = pref.getBoolean("TRACKING", false);
 		useNetworkPref = pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false);
-		notifPref = pref.getBoolean("ENABLE_NOTIFICATIONS", false);
 		
-		if(recording2)
-			goiti2.setText("Arreter l'itinerance (Service)");
+		if(tracking)
+			button_tracking.setText(R.string.button_tracking_on);
 	}
     
     /**
@@ -76,7 +75,7 @@ public class MainActivity extends Activity
 	 * @param date - Date pour laquelle creer le fichier (communement la date instantanee)
 	 * @return name - Nom du fichier
 	 */
-	private String createFilename (String dir, String date) { /// date format : aaaammdd (comme les fichiers)
+	private String createFilename (String dir, String date) { /// date format : aaaaMMdd (comme les fichiers)
 		int nMax = 0;
 		Log.v(TAG, "Path: " + dir);
 		//File f = new File(dir);
@@ -130,17 +129,17 @@ public class MainActivity extends Activity
 	 * Listener du bouton "Enregistrer itineraire" avec Service
 	 * (ou "Arreter l'itineraire en cours") 
 	 */
-	private OnClickListener goiti2Listener = new OnClickListener() {
+	private OnClickListener trackingButtonListener = new OnClickListener() {
 		/**
 		 * Lors du clique sur le bouton
 		 */
 		@Override
 		public void onClick(View v) {
-			Intent serviceIntent = new Intent(MainActivity.this, TrackService.class);
+			Intent serviceIntent = new Intent(MainActivity.this, fr.rt.acy.locapic.gps.TrackService.class);
 			/**
 			 * Si pas deja en train d'enregistrer un itineraire
 			 */
-			if(!recording2) {
+			if(!tracking) {
 				/**
 				 * Si GPS on
 				 */
@@ -152,9 +151,8 @@ public class MainActivity extends Activity
 					String filesDir = null;
 					String fileName = null;
 					boolean ext = true;
-	
 					/**
-					 * Creation du contenu du fichier a partir de la base et ajout d'un "segment" de trace (n�1)
+					 * Creation du contenu du fichier a partir de la base et ajout d'un "segment" de trace (#1)
 					 * TODO JAXP
 					 */
 					int index = GPX_BASE.indexOf("</trk>", 0)-2;
@@ -233,30 +231,19 @@ public class MainActivity extends Activity
 					serviceIntent.putExtra("isExt", ext);
 					serviceIntent.putExtra("fileName", fileName);
 					startService(serviceIntent);
-					/*
-					 * Notification et foreground service
-					 */
-			        /*Notification notification = new Notification(R.drawable.ic_action_refresh, "tickerText", System.currentTimeMillis());
-			        Intent notificationIntent = new Intent(MainActivity.this, MainActivity.class);
-			        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, notificationIntent, 0);
-			        notification.setLatestEventInfo(MainActivity.this, "Titre", "Message", pendingIntent);*/
-			        //startForeground("1", notification);
-					/*
-					 * Fin Notification et foreground service
-					 */
+
 					// Gestion de la preference (pour savoir si record en cours ou pas)
-					recording2 = true;
+					tracking = true;
 					SharedPreferences.Editor prefEditor = pref.edit();
-					prefEditor.putBoolean("RECORDING2", recording2);
+					prefEditor.putBoolean("TRACKING", tracking);
 					prefEditor.commit();
 					// Changement du bouton
-					goiti2.setText("Stopper l'itinerance (service)");
+					button_tracking.setText(R.string.button_tracking_on);
 				} else {
 					/**
 					 * Si GPS pas actif
 					 */
-					Toast.makeText(MainActivity.this, "Vous devez activer le GPS pour enregistrer un itineraire.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(MainActivity.this, R.string.toast_gps_off, Toast.LENGTH_SHORT).show();
 				}
 			} else {
 				/**
@@ -268,13 +255,14 @@ public class MainActivity extends Activity
 				// Arret du service
 				stopService(serviceIntent);
 				// Gestion de la preference (pour savoir si record en cours ou pas)
-				recording2 = false;
+				tracking = false;
 				SharedPreferences.Editor prefEditor = pref.edit();
-				prefEditor.putBoolean("RECORDING2", recording2);
+				prefEditor.putBoolean("TRACKING", tracking);
 				prefEditor.commit();
 				// Changement du bouton
-				goiti2.setText("Lancer l'itinerance (service)");
+				button_tracking.setText(R.string.button_tracking_off);
 			}
+			Log.i(TAG, "Fin onTrackingButton");
 		}
 	};
     
