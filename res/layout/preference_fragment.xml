@@ -1,0 +1,33 @@
+<PreferenceScreen
+        xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+            android:title="GPS Settings">
+
+        <EditTextPreference
+                android:key="LOCATION_INTERVAL"
+                android:title="@string/settings_gps_interval_title"
+                android:inputType="number" 
+                android:summary="@string/settings_gps_interval_summary"
+                android:dialogTitle="@string/settings_gps_interval_dialog" />
+
+		<EditTextPreference
+                android:key="LOCATION_DISTANCE"
+                android:title="@string/settings_gps_distance_title"
+                android:inputType="number" 
+                android:summary="@string/settings_gps_distance_summary"
+                android:dialogTitle="@string/settings_gps_distance_dialog" />
+		
+        <CheckBoxPreference
+                android:key="USE_NETWORK_LOCATION_PROVIDER"
+                android:title="@string/settings_gps_network_title"
+                android:summary="@string/settings_gps_network_summary" />
+	
+		<!--CheckBoxPreference
+                android:key="ENABLE_NOTIFICATIONS"
+                android:title="@string/settings_gps_notif_title"
+                android:summary="@string/settings_gps_notif_summary" /-->
+						
+    </PreferenceCategory>  
+
+</PreferenceScreen>

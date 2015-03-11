@@ -29,4 +29,17 @@
     <string name="zoomNotSupported">Zoom functionality is not supported !</string>
     <string name="scene">Scene :</string>
     
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <string name="settings_gps_title">Réglages itinéraires</string>
+	<string name="settings_gps_interval_title">Temps minimum</string>
+	<string name="settings_gps_interval_summary">Temps minimum entre deux captures de position GPS (en seconde)</string>
+	<string name="settings_gps_interval_dialog">Temps minimum entre deux captures de position GPS (en seconde)</string>
+	<string name="settings_gps_distance_title">Distance minimum</string>
+	<string name="settings_gps_distance_summary">Distance minimum entre deux captures de position GPS (en mètre)</string>
+	<string name="settings_gps_distance_dialog">Distance minimum entre deux captures de position GPS (en mètre)</string>
+	<string name="settings_gps_network_title">Utilisation les réseaux</string>
+	<string name="settings_gps_network_summary">Utiliser les réseaux (cellulaire et wifi) pour localiser l\'appareil si aucune position GPS n\'est trouvée</string>
+	<string name="settings_gps_notif_title">Autoriser les notifications</string>
+	<string name="settings_gps_notif_summary">Utiliser les notifications :</string>
+    
 </resources>

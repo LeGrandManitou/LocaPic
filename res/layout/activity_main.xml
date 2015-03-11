@@ -17,6 +17,7 @@
         android:onClick="startCamera" />
     
     <Button 
+        android:id="@+id/main_button_itineraire"
        	android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/itineraire" />
