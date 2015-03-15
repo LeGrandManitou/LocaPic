@@ -32,6 +32,7 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
+import android.view.animation.RotateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -54,10 +55,13 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private Camera camera;                  // Camera utillisee
 	private PreviewCamera previewCamera;    // preview de la camera
 	private ImageButton fastSettings;       // bouton fastSettings (activation du flash, retardateur, ...)
+	private ImageButton prendrePhoto;
     private ZoomControls zoomControls;		// bouton de control du zoom
     private int currentZoom = 0;			// niveau de zoom actuel
     private int maxZoom = 0;				// niveau de zoom maximum. Affecte dans le onCreate
     private boolean isZoomSupported = false;
+    
+    private Orientation orientationEcran = Orientation.PORTRAIT; // indique l'orientation (portrait ou paysage)
     
 	// Capteurs
 	private SensorManager sensorManager;    // gere les capteurs du telephone
@@ -83,14 +87,45 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private int retardateur = 0;            	// Retardateur en secondes (0 par defaut)
 	private List<Size> supportedPictureSizes; 	// Taille de l'appareil photo supporte
 	
+	public enum Orientation 
+	{
+		PORTRAIT("Portrait", 90, 0), PAYSAGE_0("Paysage 0", 0, 90), PAYSAGE_180("Paysage 180", 180, -90);
+		
+		private String nom;
+		private int degree;
+		/* rotation a effectuer pour passer une View créée
+		 *  en paysage dans la nouvelle orientation d'ecran */
+		private int rotation;
+		
+		Orientation(String nom, int degree, int rotation)
+		{
+			this.nom = nom;
+			this.degree = degree;
+			this.rotation = rotation;
+		}
+		
+		@Override
+		public String toString() 
+		{
+			return nom;
+		}
+		
+		public int getDegree()
+		{
+			return degree;
+		}
+		
+		public int getRotation()
+		{
+			return rotation;
+		}
+	}
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) 
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
-
-        // Mettre l'activite en plein ecran
-        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         // On active la camera par defaut
         try 
@@ -173,6 +208,9 @@ public class CameraActivity extends Activity implements SensorEventListener
             Toast.makeText(this, R.string.zoomNotSupported, Toast.LENGTH_LONG).show();
         }
         
+        // Boutons
+        prendrePhoto = (ImageButton) findViewById(R.id.prendrePhoto);
+        
         // Initialiser les variables des capteurs
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -249,13 +287,34 @@ public class CameraActivity extends Activity implements SensorEventListener
 			accelVector = event.values; // Mis a jour resultat de l'accelerometre
 			
 			float z = event.values[2]; // rotation autour de z. valeur de 9.81 a -9.81 (0 = telephone vertical)
-			z = (z / SensorManager.GRAVITY_EARTH); // z de 1 a -1 (0 = telephone vertical)
+			z = (z / SensorManager.GRAVITY_EARTH); // z est ammene autour de 1 a -1 (0 = telephone vertical)
 			
 			// z de 180 a 0 : 90 = telephone vertical, 0 horizontal(ecran vers le haut)
 			// et 180 horizontal (ecran vers le bas)
 			orientation = (z * -90) + 90; 	
-			//Log.v(TAG, "Orientation : " + String.valueOf(orientation) + "Â°"); // DEBUG
-			//sensorManager.unregisterListener(this); // on arrete l'ecoute des capteurs apres avoir obtenu une valeur
+			//Log.v(TAG, "Orientation : " + String.valueOf(orientation) + " °"); // DEBUG
+			
+			
+			// Orientation ecran
+			Orientation orientationMesured;
+			float y = event.values[1];
+			y = (y / SensorManager.GRAVITY_EARTH);
+			if(y < 0.5)
+			{
+    			float x = event.values[0];
+    			if (x < 0)
+    				orientationMesured = Orientation.PAYSAGE_180;
+    			else
+    				orientationMesured = Orientation.PAYSAGE_0;
+			}
+			else
+				orientationMesured = Orientation.PORTRAIT;
+			
+			if (orientationMesured != orientationEcran)
+			{
+				orientationEcran = orientationMesured;
+				rotateScreen(orientationMesured);// mettre a jour orientation camera et bouton
+			}		
 		}
 		else if(event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
 		{
@@ -379,6 +438,13 @@ public class CameraActivity extends Activity implements SensorEventListener
         }
     };
     
+    private void rotateScreen(Orientation orientation)
+    {
+        Log.v(TAG, "rotateScreen -> " + orientation);
+        prendrePhoto.setRotation(orientation.getRotation());
+        
+    }
+    
     private void setZoom(int zoom)
     {
     	if (isZoomSupported)
@@ -466,8 +532,6 @@ public class CameraActivity extends Activity implements SensorEventListener
                 ei.setAttribute(ExifInterface.TAG_ORIENTATION, Integer.toString(ExifInterface.ORIENTATION_ROTATE_90));
             else if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
                 ei.setAttribute(ExifInterface.TAG_ORIENTATION, Integer.toString(ExifInterface.ORIENTATION_NORMAL));
-            else
-                ei.setAttribute(ExifInterface.TAG_ORIENTATION, Integer.toString(ExifInterface.ORIENTATION_ROTATE_180));
 
             ei.saveAttributes();	// Enregistrer les metadonnees
             readMetadata(); 		// Afficher les metadonnees precedement creer pour le debugage

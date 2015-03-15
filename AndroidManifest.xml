@@ -31,6 +31,7 @@
 		<activity
             android:name="fr.rt.acy.locapic.camera.CameraActivity"
             android:theme="@android:style/Theme.Holo.Light.NoActionBar.Fullscreen"
+            android:screenOrientation="portrait"
             android:label="@string/app_name" >
         </activity>
         

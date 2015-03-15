@@ -3,6 +3,8 @@ package fr.rt.acy.locapic.camera;
 import java.io.IOException;
 import java.util.List;
 
+import fr.rt.acy.locapic.camera.CameraActivity.Orientation;
+
 import android.content.Context;
 import android.content.res.Configuration;
 import android.hardware.Camera;
@@ -19,7 +21,7 @@ public class PreviewCamera extends SurfaceView implements SurfaceHolder.Callback
 	
 	private Camera camera;
 	private SurfaceHolder holder;
-	
+		
 	public PreviewCamera(Context context, Camera camera) 
 	{
 		super(context);
@@ -40,14 +42,7 @@ public class PreviewCamera extends SurfaceView implements SurfaceHolder.Callback
 			// on lance le preview
             camera.setPreviewDisplay(holder);
             camera.startPreview();
-            
-            // on tourne l'image du preview dans le bon sens
-            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
-            	camera.setDisplayOrientation(90);
-            else if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
-            	camera.setDisplayOrientation(0);
-            else
-            	camera.setDisplayOrientation(180);
+            camera.setDisplayOrientation(90);
         }
 		catch (IOException e) 
 		{
