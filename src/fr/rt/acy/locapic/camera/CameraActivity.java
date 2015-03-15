@@ -9,11 +9,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import fr.rt.acy.locapic.R;
-
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
@@ -27,16 +24,13 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.View.OnTouchListener;
-import android.view.WindowManager;
-import android.view.animation.RotateAnimation;
+import android.view.View.OnClickListener;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.Toast;
 import android.widget.ZoomControls;
+import fr.rt.acy.locapic.R;
 
 //on supprime les warnings a cause de la classe Camera depreciee a partir de l'api 21
 @SuppressWarnings("deprecation")
@@ -54,8 +48,9 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private String cheminPhoto = null;      // Chemin de la dernier photo enregistree
 	private Camera camera;                  // Camera utillisee
 	private PreviewCamera previewCamera;    // preview de la camera
-	private ImageButton fastSettings;       // bouton fastSettings (activation du flash, retardateur, ...)
-	private ImageButton prendrePhoto;
+	private ImageButton fastSettingsButton; // bouton fastSettings (activation du flash, retardateur, ...)
+	private ImageButton prendrePhotoButton;
+	private ImageButton zoomButton;
     private ZoomControls zoomControls;		// bouton de control du zoom
     private int currentZoom = 0;			// niveau de zoom actuel
     private int maxZoom = 0;				// niveau de zoom maximum. Affecte dans le onCreate
@@ -151,8 +146,6 @@ public class CameraActivity extends Activity implements SensorEventListener
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(previewCamera);
 
-        fastSettings = (ImageButton) findViewById(R.id.fastSettings);
-
         // Zoom controls
         zoomControls = (ZoomControls) findViewById(R.id.zoomControl);
         if (isZoomSupported)
@@ -209,7 +202,34 @@ public class CameraActivity extends Activity implements SensorEventListener
         }
         
         // Boutons
-        prendrePhoto = (ImageButton) findViewById(R.id.prendrePhoto);
+        prendrePhotoButton = (ImageButton) findViewById(R.id.prendrePhoto);
+        fastSettingsButton = (ImageButton) findViewById(R.id.fastSettings);
+        zoomButton = (ImageButton) findViewById(R.id.zoom);
+        
+        prendrePhotoButton.setOnClickListener(new OnClickListener() 
+        {
+			@Override
+			public void onClick(View v)
+			{
+				prendrePhoto();
+			}
+		});
+        fastSettingsButton.setOnClickListener(new OnClickListener() 
+        {
+			@Override
+			public void onClick(View v)
+			{
+				showFastSettingsDialog();
+			}
+		});
+        zoomButton.setOnClickListener(new OnClickListener() 
+        {
+			@Override
+			public void onClick(View v)
+			{
+				showZoomPopup();
+			}
+		});
         
         // Initialiser les variables des capteurs
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -358,17 +378,12 @@ public class CameraActivity extends Activity implements SensorEventListener
     /**
      * Prend une photo
      */
-    public void prendrePhoto(View view)
+    private void prendrePhoto()
     {
         if(retardateur > 0)
         {
-            SystemClock.sleep(retardateur * 1000); // on marque une pause (= retardateur) TODO utiliser AsyncTask
-			/*for(int i = retardateur; i > 0; i--)
-			{
-				// TODO BUG: ne s'affiche pas avant la fin de la boucle
-				Toast.makeText(getApplicationContext(), String.valueOf(i) + " !!!", Toast.LENGTH_SHORT).show();
-				SystemClock.sleep(1000); // on marque une pause de 1 seconde
-			}*/
+        	//Toast.makeText(this, "Retardateur : " + String.valueOf(retardateur * 1000) + " seconde", Toast.LENGTH_LONG).show();
+            SystemClock.sleep(retardateur * 1000); // on marque une pause (= retardateur)
         }
         // On met la camera en mode auto focus (sinon camera.autoFocus() ne marche pas)
         Parameters params = camera.getParameters();
@@ -389,7 +404,7 @@ public class CameraActivity extends Activity implements SensorEventListener
         });
     }
 
-    //TODO BUG: mode focus non reinitialise apres prise de photo (lorsque zoom est utilise ? )
+    //TODO BUG: mode focus parfois non reinitialise apres prise de photo
     // Enregistrement de la photo. Appelle lors de takePicture(null, null, pictureCallback)
     private PictureCallback pictureCallback = new PictureCallback()
     {
@@ -441,8 +456,11 @@ public class CameraActivity extends Activity implements SensorEventListener
     private void rotateScreen(Orientation orientation)
     {
         Log.v(TAG, "rotateScreen -> " + orientation);
-        prendrePhoto.setRotation(orientation.getRotation());
         
+        int rotation = orientation.getRotation();
+        prendrePhotoButton.setRotation(rotation);
+        fastSettingsButton.setRotation(rotation);
+        zoomButton.setRotation(rotation);
     }
     
     private void setZoom(int zoom)
@@ -466,14 +484,6 @@ public class CameraActivity extends Activity implements SensorEventListener
     }
 
     /**
-     * Fonction permetant d'appele showFastSettingsDialog() depuis xml (onClick)
-     */
-    public void showFastSettingsDialog(View view)
-    {
-        showFastSettingsDialog();
-    }
-
-    /**
      * Affiche la boite de dialogue permetent de modifier les parametres de base
      */
     private void showFastSettingsDialog() //TODO selection de la scene
@@ -485,11 +495,6 @@ public class CameraActivity extends Activity implements SensorEventListener
         //fastSettingsIntent.putExtra("supportedPictureSizes", supportedPictureSizes.toArray());
 
         startActivityForResult(fastSettingsIntent, REQUEST_CODE_POPUP_FAST_SETTINGS);
-    }
-
-    public void showZoomPopup(View view)
-    {
-        showZoomPopup();
     }
 
     private void showZoomPopup()
@@ -527,11 +532,12 @@ public class CameraActivity extends Activity implements SensorEventListener
             // On affecte le tag userComment
             ei.setAttribute(TAG_USER_COMMENT, tagPerso);
 
-            // fixe l'orientation de la photo  TODO a amelierer : lorsque le telephone est completement retourne
-            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+            if (orientationEcran == Orientation.PORTRAIT)
                 ei.setAttribute(ExifInterface.TAG_ORIENTATION, Integer.toString(ExifInterface.ORIENTATION_ROTATE_90));
-            else if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
+            else if (orientationEcran == Orientation.PAYSAGE_0)
                 ei.setAttribute(ExifInterface.TAG_ORIENTATION, Integer.toString(ExifInterface.ORIENTATION_NORMAL));
+            else if (orientationEcran == Orientation.PAYSAGE_180)
+            	ei.setAttribute(ExifInterface.TAG_ORIENTATION, Integer.toString(ExifInterface.ORIENTATION_ROTATE_180));
 
             ei.saveAttributes();	// Enregistrer les metadonnees
             readMetadata(); 		// Afficher les metadonnees precedement creer pour le debugage
@@ -609,4 +615,5 @@ public class CameraActivity extends Activity implements SensorEventListener
     {
 
     }
+    
 }

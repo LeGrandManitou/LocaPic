@@ -3,16 +3,13 @@ package fr.rt.acy.locapic.camera;
 import java.io.IOException;
 import java.util.List;
 
-import fr.rt.acy.locapic.camera.CameraActivity.Orientation;
-
 import android.content.Context;
-import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-// on supprime les warnings a cause de classe depreciee
+// on supprime les warnings a cause de classe depreciee (nottament Camera)
 @SuppressWarnings("deprecation")
 public class PreviewCamera extends SurfaceView implements SurfaceHolder.Callback
 {
