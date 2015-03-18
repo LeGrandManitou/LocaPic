@@ -5,29 +5,76 @@
             android:title="GPS Settings">
 
         <EditTextPreference
+            	android:id="@+id/settings_locInt"
                 android:key="LOCATION_INTERVAL"
-                android:title="@string/settings_gps_interval_title"
+                android:title="Minimum time"
                 android:inputType="number" 
-                android:summary="@string/settings_gps_interval_summary"
-                android:dialogTitle="@string/settings_gps_interval_dialog" />
+                android:summary="Minimum time between each point (in seconds)"
+                android:dialogTitle="Minimum time between each point (in seconds)" />
 
 		<EditTextPreference
+		    	android:id="@+id/settings_locDist"
                 android:key="LOCATION_DISTANCE"
-                android:title="@string/settings_gps_distance_title"
+                android:title="Minimum distance"
                 android:inputType="number" 
-                android:summary="@string/settings_gps_distance_summary"
-                android:dialogTitle="@string/settings_gps_distance_dialog" />
+                android:summary="Minimum distance between each point (in meter)"
+                android:dialogTitle="Minimum distance between each point (in meter)" />
 		
         <CheckBoxPreference
+            	android:id="@+id/settings_useNetwork"
                 android:key="USE_NETWORK_LOCATION_PROVIDER"
-                android:title="@string/settings_gps_network_title"
-                android:summary="@string/settings_gps_network_summary" />
+                android:title="Use network location provider"
+                android:summary="Use network location provider if no GPS location is found, less accurate" />
 	
 		<!--CheckBoxPreference
                 android:key="ENABLE_NOTIFICATIONS"
-                android:title="@string/settings_gps_notif_title"
-                android:summary="@string/settings_gps_notif_summary" /-->
-						
+                android:title="Notification"
+                android:summary="Show notification when recording route" /-->
+		
     </PreferenceCategory>  
-
+	
+	<PreferenceCategory
+            android:title="GPX Settings">
+				
+			<EditTextPreference
+				android:id="@+id/settings_user_name"
+			    android:key="AUTHORS_NAME"
+			    android:title="Your name for the GPX files"
+			    android:inputType="text" 
+			    android:summary="Your name"
+			    android:dialogTitle="Your name" />
+            
+			<EditTextPreference
+				android:id="@+id/settings_user_email"
+			    android:key="AUTHORS_EMAIL"
+			    android:title="Your email address for the GPX files"
+			    android:inputType="textEmailAddress" 
+			    android:summary="Your email address"
+			    android:dialogTitle="Your email address" />
+			
+			<EditTextPreference
+				android:id="@+id/settings_track_name"
+			    android:key="TRACK_NAME"
+			    android:title="The name for the gpx files"
+			    android:inputType="text" 
+			    android:summary="The name of the gpx files"
+			    android:dialogTitle="Metadata only" />
+			
+			<EditTextPreference
+				android:id="@+id/settings_track_desc"
+			    android:key="TRACK_DESC"
+			    android:title="The description of the gpx files"
+			    android:inputType="text" 
+			    android:summary="The description of the gpx files"
+			    android:dialogTitle="Metadata" />
+			
+			<EditTextPreference
+				android:id="@+id/settings_track_keywords"
+			    android:key="TRACK_KEYWORDS"
+			    android:title="The keywords for the gpx files"
+			    android:inputType="text" 
+			    android:summary="The keywords for the gpx files"
+			    android:dialogTitle="Metadata" />
+			
+	</PreferenceCategory>
 </PreferenceScreen>

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
 import fr.rt.acy.locapic.gps.TrackService;
 import fr.rt.acy.locapic.camera.CameraActivity;
 import android.app.Activity;
@@ -69,63 +70,6 @@ public class MainActivity extends Activity
 	}
     
     /**
-	 * Creer un nom de fichier de type trace-[date]-[n+1].gpx en fonction des fichiers deja presents dans le repertoire $dir
-	 * Avec date, une chaine (ici utilise sous la forme aaaammdd) et trace-[date]-[n].gpx un fichier existant (n le plus grand possible pour la date choisie
-	 * @param dir - Repertoire ou sont stocker les fichiers
-	 * @param date - Date pour laquelle creer le fichier (communement la date instantanee)
-	 * @return name - Nom du fichier
-	 */
-	private String createFilename (String dir, String date) { /// date format : aaaaMMdd (comme les fichiers)
-		int nMax = 0;
-		Log.v(TAG, "Path: " + dir);
-		//File f = new File(dir);
-		//File file[] = f.listFiles();
-		// Listing des fichiers du repertoire $dir dans un tableau
-		File file[] = new File(dir).listFiles();
-		Log.v(TAG, "Size: "+ file.length);
-		
-		for (int i=0; i < file.length; i++) {
-			Log.v(TAG, "FileName:" + file[i].getName());
-			/*
-			 * Si le nom du fichier correspond a la regex suivante :
-			 * "trace-aaaammdd-n.gpx"
-			 * avec aaaammdd = $date et n, un nombre (au moins un chiffre)
-			 */
-			if (file[i].getName().matches("trace-"+date+"-\\d+\\.gpx")) {
-				/*
-				 * Index du premier caractere du nombre n dans le nom du fichier
-				 * On cherche le 2eme tiret et on ajoute 1
-				 * Pour trouver le 2eme tiret : on cherche un tiret a partir de l'index du premier tiret trouve +1
-				 */
-				int index1 = file[i].getName().indexOf("-", file[i].getName().indexOf("-")+1)+1;
-				/*
-				 * Index du premier caractere qui correspond a la chaine ".gpx" dans le nom du fichier
-				 * Permet de couper le chaine avec substring et de recuperer seulement le nombre en enlevant ce qui reste a partir de cet index
-				 */
-				int index2 = file[i].getName().indexOf(".gpx");
-				// On recupere le numero seul du fichier avec les 2 index precedents
-				String numS = file[i].getName().substring(index1, index2);
-				// Recuperation du numero et test si il est le plus grand des numeros analyses dans un try/catch au cas ou on recupere une chaine vide
-				try {
-					int n = Integer.parseInt(numS);
-					if (nMax < n)
-						nMax = n;
-				} catch (NumberFormatException nfe) {
-					Log.e(TAG, "Exception catched : "+nfe);
-				}
-				Log.v(TAG, "Match, index of '.gpx' : "+index2+" ; index of '-' : "+index1+" ; numS : "+numS);
-			} else {
-				Log.v(TAG, "Not match.");
-			}
-		}
-		// Creation de la chaine dans un Builder avec nMax+1, nMax etant le numero de fichier le plus grand pour la date passe en parametre 
-		StringBuilder fileNameBuilder = new StringBuilder("trace-"+date+"-"+(nMax+1)+".gpx");
-		String name = fileNameBuilder.toString();
-		Log.v(TAG, "New File Name => "+name);
-		return name;
-	}
-    
-    /**
 	 * Listener du bouton "Enregistrer itineraire" avec Service
 	 * (ou "Arreter l'itineraire en cours") 
 	 */
@@ -144,106 +88,19 @@ public class MainActivity extends Activity
 				 * Si GPS on
 				 */
 				if(lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-					/**
-					 * Creation du fichier
-					 */
-					// Variables qui seront donnees au Service par l'intent, modifiee plus loin en fonction du support de stockage disponible
-					String filesDir = null;
-					String fileName = null;
-					boolean ext = true;
-					/**
-					 * Creation du contenu du fichier a partir de la base et ajout d'un "segment" de trace (#1)
-					 * TODO JAXP
-					 */
-					int index = GPX_BASE.indexOf("</trk>", 0)-2;
-					String gpxFile = new StringBuilder(GPX_BASE).insert(index, "\n\t\t<number>1</number>\n\t\t<trkseg>\n\t\t</trkseg>").toString();
-					
-					// Date actuelle
-					Date now = new Date();
-					// Format de la date
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd", Locale.FRENCH);
-					// Creation de la chaine de la date actuelle a partir de l'objet Date now et du format (SimpleDateFormat).
-					String dateNow = new String(sdf.format(now));
-					
-					/**
-					 * Try/Catch pour :
-					 * 1 - IOException a cause de :
-					 * 		- File.createNewFile()
-					 * 		- FileOutputStream.write()
-					 * 		- FileOutputStream.close()
-					 * 2 - FileNotFoundException a cause de :
-					 * 		- FileOutputStream(File)	// Instanciation
-					 */
-					try {
-						// Si il y a un media externe et si le media externe n'est pas en lecture seule
-						if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
-								&& !Environment.MEDIA_MOUNTED_READ_ONLY.equals(Environment.getExternalStorageState()) && ext == true) {
-							// Creation du repertoire (si c'est la premiere fois par exemple)
-							File traceFile = new File(FILES_DIR);
-							traceFile.mkdir();
-							// Affectation du chemin du repertoire a la variable filesDir qui sera envoye au Service
-							filesDir = traceFile.getAbsolutePath();
-							// Creation du nom de fichier a utilise en fonction du contenu du repertoire
-							// + Affectation du nouveau nom a la variable fileName qui sera aussi envoyee au service
-							fileName = createFilename(filesDir, dateNow);
-							// Reutilisation de traceFil pour creer le fichier (objet java)
-							traceFile = new File(FILES_DIR+fileName);
-							// Creation du fichier
-							traceFile.createNewFile();
-							// Ouverture d'un flux sortant vers le fichier
-							FileOutputStream output = new FileOutputStream(traceFile);
-							// Ecriture dans le fichier avec le flux et les octets de la chaine gpxFile
-							output.write(gpxFile.getBytes());
-							// fermeture du flux d'ecriture si il existe
-							if(output != null)
-								output.close();
-						} else {
-							/* Sinon utilisation du stockage interne */
-							// Recuperation du chemin du stockage interne dedie a l'appli et affectation a filesDir qui sera envoye au Service
-							filesDir = getFilesDir().getAbsolutePath();
-							// Variable ext qui sera donnee au Service mise a false
-							ext = false;
-							// Creation du nom de fichier a utilise en fonction du contenu du repertoire
-							// + Affectation du nouveau nom a la variable fileName qui sera aussi envoyee au service
-							fileName = createFilename(filesDir, dateNow);
-							// Ouverture d'un flux sortant vers le fichier - Fichier lisible par tout le monde car fichier pour l'utilisateur
-							FileOutputStream output = openFileOutput(fileName, MODE_WORLD_READABLE);
-							// Ecriture dans le fichier avec le flux et les octets de la chaine gpxFile
-							output.write(gpxFile.getBytes());
-							// fermeture du flux d'ecriture si il existe
-							if(output != null)
-								output.close();
-						}
-						Log.v(TAG, "Files dir : "+filesDir);
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					
-					/**
-					 * Preparation et demarrage du service
-					 * + enregistrement en preference du debut du recording
-					 * + changement du texte du bouton
-					 */
-					// Intent et Service
-					serviceIntent.putExtra("directory", filesDir);
-					serviceIntent.putExtra("isExt", ext);
-					serviceIntent.putExtra("fileName", fileName);
 					startService(serviceIntent);
-
 					// Gestion de la preference (pour savoir si record en cours ou pas)
-					tracking = true;
+					tracking = true; //PreferenceManager.getDefaultSharedPreferences(getBaseContext())
 					SharedPreferences.Editor prefEditor = pref.edit();
 					prefEditor.putBoolean("TRACKING", tracking);
 					prefEditor.commit();
 					// Changement du bouton
-					button_tracking.setText(R.string.button_tracking_on);
+					button_tracking.setText("Stopper l'itinerance (service)");
 				} else {
 					/**
 					 * Si GPS pas actif
 					 */
-					Toast.makeText(MainActivity.this, R.string.toast_gps_off, Toast.LENGTH_SHORT).show();
+					Toast.makeText(MainActivity.this, "Vous devez activer le GPS pour enregistrer un itineraire.", Toast.LENGTH_SHORT).show();
 				}
 			} else {
 				/**
@@ -253,6 +110,7 @@ public class MainActivity extends Activity
 				 * + Edition de la preference
 				 */
 				// Arret du service
+				//serviceIntent.putExtra("STOP", true);
 				stopService(serviceIntent);
 				// Gestion de la preference (pour savoir si record en cours ou pas)
 				tracking = false;
@@ -260,9 +118,8 @@ public class MainActivity extends Activity
 				prefEditor.putBoolean("TRACKING", tracking);
 				prefEditor.commit();
 				// Changement du bouton
-				button_tracking.setText(R.string.button_tracking_off);
+				button_tracking.setText("Lancer l'itinerance (service)");
 			}
-			Log.i(TAG, "Fin onTrackingButton");
 		}
 	};
     

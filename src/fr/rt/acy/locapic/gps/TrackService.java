@@ -6,10 +6,22 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-import android.app.IntentService;
+
+import org.jdom2.Attribute;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.Namespace;
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
+
+import fr.rt.acy.locapic.R;
+
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -19,215 +31,397 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Handler;
+import android.os.Environment;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Process;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
-import fr.rt.acy.locapic.*;
 
-public class TrackService extends Service
-{
-	/*public TrackService(String name) {
-		super("TrackService");
-	}
-	public TrackService() {
-		super("TrackService");
-	}*/
+public class TrackService extends Service implements android.location.LocationListener, android.location.GpsStatus.NmeaListener {
+	/**
+	 * Attributs du service
+	 */
 	private static final String TAG = "trackService";
 	private LocationManager mLocationManager = null;
 	private static int LOCATION_INTERVAL = 2000;
 	private static float LOCATION_DISTANCE = 0; //10f
 	private static int test = 0;
-	private String directory = null;
-	private String fileName = null;
 	private String GSA = null;
-	private String TEMP = null;
-	private String pos = null;
-	private Looper mServiceLooper;
-	private ServiceHandler mServiceHandler;
 	private SharedPreferences pref;
+	private Namespace ns = Namespace.getNamespace("http://www.topografix.com/GPX/1/1");
+	private static boolean TRACKING = false;
+	private static String FILE_DIRECTORY;
+	private static String FILE_NAME;
+	private final String EXT_FILES_DIR = Environment.getExternalStorageDirectory().getPath() + "/MyTracks/";
+	private SharedPreferences.Editor prefEditor;
 	
 	/**
-	 * 
-	 * @author Samuel
-	 *
+	 * Methode pour creer le document JDOM de base pour le fichier GPX
+	 * Prend en parametre des valeurs pour les metadonnees GPX (contenues dans la balise <metadata>)
+	 * @param name - Nom du fichier gpx (pour les metadonnees GPX)
+	 * @param desc - Description du fichier gpx (pour les metadonnees GPX)
+	 * @param authorsName - Nom de l'autheur de la trace (pour les metadonnees GPX)
+	 * @param authorsEmail - Email de l'autheur de la trace (pour les metadonnees GPX)
+	 * @param keywords - Mots-clé pour les metadonnees GPX
+	 * @return document - Le document JDOM servant de base GPX
 	 */
-	private final class ServiceHandler extends Handler {
-		public ServiceHandler(Looper looper) {
-			super(looper);
+	public Document createGpxDocTree(String name, String desc, String authorsName, String authorsEmail, String keywords) {
+		/* Pour la date */
+		Calendar calendar = Calendar.getInstance();
+		Date date = calendar.getTime();
+		// Format de la date
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss", Locale.FRENCH);
+		// Reglage de la timezone TODO Get timezone
+		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT+1"));
+		StringBuilder dateBuilder = new StringBuilder(dateFormat.format(date));
+		// Pour le format GPX, T apres la date et avant l'heure, et Z a la fin
+		dateBuilder.append("Z");
+		dateBuilder.insert(10, "T");
+		// Conversion builder => string
+		String formattedDate = dateBuilder.toString();
+		Log.v(TAG, "TIME => "+formattedDate);
+		
+		/* Pour le reste */
+		String mailId;
+		String mailDomain;
+		if(name == null)
+			name = "LocaPic track";
+		if(desc == null)
+			desc = "GPS track logged on an Android device with an application from a project by Samuel Beaurepaire &amp; Virgile Beguin for IUT of Annecy (Fr), RT departement.";
+		if(authorsName == null)
+			authorsName = "Samuel Beaurepaire";
+		if(authorsEmail == null) {
+			mailId = "sjbeaurepaire";
+			mailDomain = "orange.fr";
+		} else {
+			String[] mail = authorsEmail.split("@", 2);
+			mailId = mail[0];
+			mailDomain = mail[1];
 		}
-		@Override
-		public void handleMessage(Message msg) {
-			long endTime = System.currentTimeMillis() + 30*1000;
-			while (System.currentTimeMillis() < endTime) {
-				Log.v(TAG, "Service thread handler : bllbl");
-				synchronized (this) {
-					try {
-						//wait(endTime - System.currentTimeMillis());
-						wait(1000);
-					} catch (Exception e) {
-					}
-				}
+		
+		// xsi du namespace a indique seulement pour la racine (addNamespaceDeclaratin())
+		Namespace XSI = Namespace.getNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
+		// Creation de la racine du fichier gpx (<gpx></gpx>) sous forme d'objet de classe Element avec le namespace gpx
+		Element xml_gpx = new Element("gpx", ns);
+		// Namespace XSI et attributs
+		xml_gpx.addNamespaceDeclaration(XSI);
+		xml_gpx.setAttribute(new Attribute("schemaLocation", "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd", XSI));
+		xml_gpx.setAttribute(new Attribute("creator", "LocaPic"));
+		xml_gpx.setAttribute(new Attribute("version", "1.1"));
+
+		// On cree un nouveau Document JDOM base sur la racine que l'on vient de creer
+		Document document = new Document(xml_gpx);
+		// ~~~~~~~~~~~~~~~~ <metadata> ~~~~~~~~~~~~~~~~
+		Element xml_metadata = new Element("metadata", ns);
+		xml_gpx.addContent(xml_metadata);
+			// ~~~~~~~~~~~~~~~~ <name> ~~~~~~~~~~~~~~~~
+			Element xml_metadata_name = new Element("name", ns);
+			xml_metadata_name.addContent(name);
+			xml_metadata.addContent(xml_metadata_name);
+			// ~~~~~~~~~~~~~~~~ <desc> ~~~~~~~~~~~~~~~~
+			Element xml_metadata_desc = new Element("desc", ns);
+			xml_metadata_desc.addContent(desc);
+			xml_metadata.addContent(xml_metadata_desc);
+			// ~~~~~~~~~~~~~~~~ <author> ~~~~~~~~~~~~~~~~
+			Element xml_metadata_author = new Element("author", ns);
+				// ~~~~~~~~~~~~~~~~ <author> ~~~~~~~~~~~~~~~~
+				Element xml_metadata_author_name = new Element("name", ns);
+				xml_metadata_author_name.addContent(authorsName);
+				xml_metadata_author.addContent(xml_metadata_author_name);
+				// ~~~~~~~~~~~~~~~~ <email> ~~~~~~~~~~~~~~~~
+				Element xml_metadata_author_email = new Element("email", ns);
+				xml_metadata_author_email.setAttribute("id", mailId);
+				xml_metadata_author_email.setAttribute("domain", mailDomain);
+				xml_metadata_author.addContent(xml_metadata_author_email);
+			xml_metadata.addContent(xml_metadata_author);
+			// ~~~~~~~~~~~~~~~~ <time> ~~~~~~~~~~~~~~~~
+			Element xml_metadata_time = new Element("time", ns);
+			xml_metadata_time.addContent(formattedDate);
+			xml_metadata.addContent(xml_metadata_time);
+			// ~~~~~~~~~~~~~~~~ <keywords> ~~~~~~~~~~~~~~~~
+			if (keywords != null) {
+				Element xml_keywords = new Element("keywords", ns);
+				xml_keywords.addContent(keywords);
+				xml_metadata.addContent(xml_keywords);
 			}
-			Log.v(TAG, "Fin service thread handler");
-			//stopSelf(msg.arg1);
-		}
+		// ~~~~~~~~~~~~~~~~ <trk> ~~~~~~~~~~~~~~~~
+		Element xml_trk = new Element("trk", ns);
+			// ~~~~~~~~~~~~~~~~ <number> ~~~~~~~~~~~~~~~~
+			Element xml_trk_number = new Element("number", ns);
+			xml_trk_number.addContent("1");
+			xml_trk.addContent(xml_trk_number);
+			// ~~~~~~~~~~~~~~~~ <trkseg> ~~~~~~~~~~~~~~~~
+			Element xml_trk_trkseg = new Element("trkseg", ns);
+			xml_trk.addContent(xml_trk_trkseg);
+		xml_gpx.addContent(xml_trk);
+		
+		return document;
 	}
 	
 	/**
-	 * @author Samuel
+	 * Creer le nom du fichier a partir des fichiers du parametre dir et de la date
+	 * Le nom du fichier est de la forme : [baseName]-[date]-[n].gpx
+	 * Avec baseName, un nom generique, ici track
+	 * date au format aaaaMMdd
+	 * n, un numero de fichier
+	 * @param dir - Repertoire ou sont stocke les fichiers
+	 * @param date - date du nom de fichier a creer
+	 * @return name - le nom du fichier creer
 	 */
-	private class NmeaGpgsaListener implements android.location.GpsStatus.NmeaListener {
-		@Override
-		public void onNmeaReceived(long timestamp, String nmea) {
-			Log.v(TAG, "NMEA beg :=> "+nmea.substring(0, 6));
-			if(nmea.substring(0, 6).equals("$GPGSA")) {
-				GSA = nmea;
-			}
-		}
-	}
-	
-	/**
-	 * @author Samuel
-	 */
-	private class LocationListener implements android.location.LocationListener, android.location.GpsStatus.NmeaListener{
-		Location mLastLocation;
-		public LocationListener(String provider)
-		{
-			Log.v(TAG, "LocationListener " + provider);
-			mLastLocation = new Location(provider);
-		}
-		@Override
-		public void onLocationChanged(Location location)
-		{
-			Log.v(TAG, "onLocationChanged: " + location);
-			mLastLocation.set(location);
-			Log.i(TAG, "onLocationChanged ; test = "+test);
-			test++;
-			
+	private String createFilename (String dir, String date) { /// date format : aaaammdd (comme les fichiers)
+		int nMax = 0;
+		String baseName = "track";
+		Log.v(TAG, "Path: " + dir);
+		//File f = new File(dir);
+		//File file[] = f.listFiles();
+		// Listing des fichiers du repertoire $dir dans un tableau
+		File file[] = new File(dir).listFiles();
+		Log.v(TAG, "Size: "+ file.length);
+		
+		for (int i=0; i < file.length; i++) {
+			Log.v(TAG, "FileName:" + file[i].getName());
 			/*
-			 * Save
+			 * Si le nom du fichier correspond a la regex suivante :
+			 * "trace-aaaammdd-n.gpx"
+			 * avec aaaammdd = $date et n, un nombre (au moins un chiffre)
 			 */
-			Log.v(TAG, "Extra : directory => "+directory+" ; file name : "+fileName);
-			Log.v(TAG, "NMEA : GSA => "+GSA);
-			mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-			//mLocationManager.addNmeaListener(this);
-			if(location != null) {
-				Log.v(TAG, "Latitude " + location.getLatitude() + " et longitude " + location.getLongitude());
-				File gpxFile = null;
-				FileOutputStream output = null;
-				StringBuffer lu = null;
-				try {
-					gpxFile = new File(directory+"/"+fileName);
-					FileInputStream input = new FileInputStream(gpxFile);
-					int value;
-					lu = new StringBuffer();
-					while((value = input.read()) != -1) {
-						lu.append((char)value);
-					}
-					if(input != null)
-						input.close();
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-
+			if (file[i].getName().matches(baseName+"-"+date+"-\\d+\\.gpx")) {
 				/*
-				 * Creation de la date
+				 * Index du premier caractere du nombre n dans le nom du fichier
+				 * On cherche le 2eme tiret et on ajoute 1
+				 * Pour trouver le 2eme tiret : on cherche un tiret a partir de l'index du premier tiret trouve +1
 				 */
-				long posixTime = (long) location.getTime();
-				Date date = new Date(posixTime); /// *1000 pour passer le temps en millisecondes //*1000L ???
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss", Locale.FRENCH); /// Format de la date
-				sdf.setTimeZone(TimeZone.getTimeZone("GMT+1")); /// Give a timezone reference for formating
-				StringBuilder formattedDateBuilder = new StringBuilder(sdf.format(date));
-				formattedDateBuilder.append("Z");
-				formattedDateBuilder.insert(10, "T");
-				String formattedDate = formattedDateBuilder.toString();
-				Log.v(TAG, "TIME => "+formattedDate);
-
+				int index1 = file[i].getName().indexOf("-", file[i].getName().indexOf("-")+1)+1;
 				/*
-				 * gestion du fix et de la precision DOP (NMEA, $GPGSA)
+				 * Index du premier caractere qui correspond a la chaine ".gpx" dans le nom du fichier
+				 * Permet de couper le chaine avec substring et de recuperer seulement le nombre en enlevant ce qui reste a partir de cet index
 				 */
-				String nbSat = String.valueOf(location.getExtras().getInt("satellites"));
-				String posDOP = "";
-				if(nbSat != null)
-					posDOP += "<sat>"+nbSat+"</sat>";
-				String locFix = "2d";
-				//GSA = MainActivity.getNMEA();
-				if(GSA != null) {
-					String[] gsarray = GSA.split(",");
-					String pdop = gsarray[gsarray.length - 3];
-					String hdop = gsarray[gsarray.length - 2];
-					String vdop = gsarray[gsarray.length - 1].substring(0, gsarray[gsarray.length - 1].length() - 5);
-					if (gsarray[2] == "2" || gsarray[2] == "3")
-						locFix=gsarray[2]+"d";
-					if(hdop != "") {
-						posDOP += "<hdop>"+hdop+"</hdop>";
-						if(vdop != "")
-							posDOP += "<vdop>"+vdop+"</vdop><pdop>"+pdop+"</pdop>";
-					}
-				}
-				
-				TEMP = lu.toString();
-				int index = TEMP.indexOf("</trkseg>", 0)-3;
-				String ele = "";
-				if(locFix == "3d" || location.getAltitude() != 0.0) {
-					ele += "<ele>"+location.getAltitude()+"</ele>";
-					locFix = "3d";
-				}
-				pos = "\n\t\t\t<trkpt lat=\""+location.getLatitude()+"\" lon=\""+location.getLongitude()+"\">"+ele+"<time>"+formattedDate+"</time><fix>"+locFix+"</fix>"; //</trkpt>
-				pos += posDOP+"</trkpt>";
-				TEMP = new StringBuilder(TEMP).insert(index, pos).toString();
-
+				int index2 = file[i].getName().indexOf(".gpx");
+				// On recupere le numero seul du fichier avec les 2 index precedents
+				String numS = file[i].getName().substring(index1, index2);
+				// Recuperation du numero et test si il est le plus grand des numeros analyses dans un try/catch au cas ou on recupere une chaine vide
 				try {
-					output = new FileOutputStream(gpxFile);
-					output.write(TEMP.getBytes());
-					if(output != null)
-						output.close();
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
+					int n = Integer.parseInt(numS);
+					if (nMax < n)
+						nMax = n;
+				} catch (NumberFormatException nfe) {
+					Log.e(TAG, "Exception catched : "+nfe);
 				}
+				Log.v(TAG, "Match, index of '.gpx' : "+index2+" ; index of '-' : "+index1+" ; numS : "+numS);
 			} else {
-				Log.v(TAG, "Loc == null");
-			}
-			/*
-			 * Fin save
-			 */
-		}
-		@Override
-		public void onProviderDisabled(String provider)
-		{
-			Log.v(TAG, "onProviderDisabled: " + provider);            
-		}
-		@Override
-		public void onProviderEnabled(String provider)
-		{
-			Log.v(TAG, "onProviderEnabled: " + provider);
-		}
-		@Override
-		public void onStatusChanged(String provider, int status, Bundle extras)
-		{
-			Log.v(TAG, "onStatusChanged: " + provider);
-		}
-		@Override
-		public void onNmeaReceived(long timestamp, String nmea) {
-			Log.v(TAG, "NMEA start :=> "+nmea.substring(0, 6));
-			if(nmea.substring(0, 6).equals("$GPGSA")) {
-				GSA = nmea;
+				Log.v(TAG, "Not match.");
 			}
 		}
-	} 
-	LocationListener mLocationListeners = new LocationListener(LocationManager.GPS_PROVIDER);
-	NmeaGpgsaListener mNMEAListener = new NmeaGpgsaListener();
+		// Creation de la chaine dans un Builder avec nMax+1, nMax etant le numero de fichier le plus grand pour la date passe en parametre 
+		StringBuilder fileNameBuilder = new StringBuilder(baseName+"-"+date+"-"+(nMax+1)+".gpx");
+		String name = fileNameBuilder.toString();
+		Log.v(TAG, "New File Name => "+name);
+		return name;
+	}
 	
+	/**
+	 * Methode qui ecrit un fichier a partir du document JDOM doc en utilisant la methode createFilename pour obtenir chemin et nom du fichier
+	 * @param doc - Un document JDOM avec lequel creer le fichier
+	 * @return true
+	 */
+	public boolean saveFile(Document doc) {
+		/**
+		 * Creation du fichier
+		 */
+		/**
+		 * Creation du contenu du fichier a partir de la base et ajout d'un "segment" de trace
+		 */
+		//int index = GPX_BASE.indexOf("</trk>", 0)-2;
+		//String gpxFile = new StringBuilder(GPX_BASE).insert(index, "\n\t\t<number>1</number>\n\t\t<trkseg>\n\t\t</trkseg>").toString();
+		
+		// Date actuelle
+		Date now = new Date();
+		// Format de la date
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd", Locale.FRENCH);
+		// Creation de la chaine de la date actuelle a partir de l'objet Date now et du format (SimpleDateFormat).
+		String dateNow = new String(sdf.format(now));
+		
+		/**
+		 * Try/Catch pour :
+		 * 1 - IOException a cause de :
+		 * 		- File.createNewFile()
+		 * 		- FileOutputStream.write()
+		 * 		- FileOutputStream.close()
+		 * 2 - FileNotFoundException a cause de :
+		 * 		- FileOutputStream(File)	// Instanciation
+		 */
+		// Partie enregistrement dans Fichier
+		XMLOutputter xmlOutput = new XMLOutputter(Format.getPrettyFormat());
+		try {
+			// Si il y a un media externe et si le media externe n'est pas en lecture seule
+			if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
+					&& !Environment.MEDIA_MOUNTED_READ_ONLY.equals(Environment.getExternalStorageState())) {
+				// Creation du repertoire (si c'est la premiere fois par exemple)
+				File trackFile = new File(EXT_FILES_DIR);
+				trackFile.mkdir();
+				// Sauvegarde du repertoire et du nom de fichier dans des attributs de classe
+				FILE_DIRECTORY = trackFile.getAbsolutePath();
+				FILE_NAME = FILE_DIRECTORY+createFilename(FILE_DIRECTORY, dateNow);
+				// Creation du nom de fichier a utilise en fonction du contenu du repertoire
+				// Reutilisation de trackFile pour creer le fichier (objet java)
+				trackFile = new File(FILE_NAME);
+				// Creation du fichier
+				trackFile.createNewFile();
+				// Ouverture d'un flux sortant vers le fichier
+				FileOutputStream output = new FileOutputStream(trackFile);
+				// Ecriture dans le fichier avec le flux et les octets de la chaine gpxFile
+				xmlOutput.output(doc, output);
+				// fermeture du flux d'ecriture si il existe
+				if(output != null)
+					output.close();
+			} else {
+				/* Sinon utilisation du stockage interne */
+				// Sauvegarde du repertoire et du nom de fichier dans des attributs de classe
+				FILE_DIRECTORY = getFilesDir().getAbsolutePath();
+				FILE_NAME = createFilename(FILE_DIRECTORY, dateNow);
+				// Creation du nom de fichier a utilise en fonction du contenu du repertoire
+				// Ouverture d'un flux sortant vers le fichier - Fichier lisible par tout le monde car fichier pour l'utilisateur
+				FileOutputStream output = openFileOutput(FILE_NAME, MODE_WORLD_READABLE);
+				// Ecriture dans le fichier avec le flux et les octets de la chaine gpxFile
+				xmlOutput.output(doc, output);
+				// fermeture du flux d'ecriture si il existe
+				if(output != null)
+					output.close();
+			}
+			Log.v(TAG, "Files dir : "+FILE_DIRECTORY);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
+	
+	/**
+	 * Methode qui creer l'element JDOM pour la nouvelle localisation (<trkpt> pour track point)
+	 * Utilise la localisation passe en parametre et l'attribut de classe GSA (String)
+	 * @param loc - la nouvelle localisation
+	 * @return Element - element JDOM representant la position
+	 */
+	public Element createLocationElement(Location loc) {
+		Element locElement = new Element("trkpt", ns);
+		locElement.setAttribute("lat", String.valueOf(loc.getLatitude()));
+		locElement.setAttribute("lon", String.valueOf(loc.getLongitude()));
+		
+		/*
+		 * Ajout de l'altitude
+		 */
+		if (loc.hasAltitude()) {
+			Element locAltitude = new Element("ele", ns);
+			locAltitude.setText(String.valueOf(loc.getAltitude()));
+			locElement.addContent(locAltitude);
+		}
+		/*
+		 * Creation de la date
+		 */
+		long posixTime = (long) loc.getTime();
+		Date date = new Date(posixTime); /// *1000 pour passer le temps en millisecondes //*1000L ???
+		// TODO Get timezone
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss", Locale.FRENCH); /// Format de la date
+		sdf.setTimeZone(TimeZone.getTimeZone("GMT+1")); /// Give a timezone reference for formating
+		StringBuilder formattedDateBuilder = new StringBuilder(sdf.format(date));
+		formattedDateBuilder.append("Z");
+		formattedDateBuilder.insert(10, "T");
+		String formattedDate = formattedDateBuilder.toString();
+		Log.v(TAG, "TIME => "+formattedDate);
+		// Ajout de la date a l'element
+		Element locTime = new Element("time", ns);
+		locTime.setText(formattedDate);
+		locElement.addContent(locTime);
+	
+		/*
+		 * gestion du fix et de la precision DOP (NMEA, $GPGSA)
+		 */
+		Element locFixElem = new Element("fix", ns);
+		Element locSats = new Element("sat", ns);
+		Element locHdop = new Element("hdop", ns);
+		Element locVdop = new Element("vdop", ns);
+		Element locPdop = new Element("pdop", ns);
+		String pdop = "";
+		String hdop = "";
+		String vdop = "";
+		
+		String nbSat = String.valueOf(loc.getExtras().getInt("satellites"));
+		String locFix = "2d";
+		// Si on a une chaine GSA
+		if(GSA != null) {
+			String[] gsarray = GSA.split(",");
+			pdop = gsarray[gsarray.length - 3];
+			hdop = gsarray[gsarray.length - 2];
+			vdop = gsarray[gsarray.length - 1].substring(0, gsarray[gsarray.length - 1].length() - 5);
+			if (gsarray[2] == "2" || gsarray[2] == "3")
+				locFix=gsarray[2]+"d";
+		}
+		if(locFix == "2d")
+			locElement.removeChild("ele", ns);
+		/*
+		 * Ajout fix et DOP
+		 */
+		locFixElem.setText(locFix);
+		locElement.addContent(locFixElem);
+		if(nbSat != null && nbSat != "0") {
+			locSats.setText(nbSat);
+			locElement.addContent(locSats);
+		}
+		if(hdop != "") {
+			locHdop.setText(hdop);
+			locElement.addContent(locHdop);
+			if(vdop != "")
+				locVdop.setText(vdop);
+				locElement.addContent(locVdop);
+				if(pdop != "") {
+					locPdop.setText(pdop);
+					locElement.addContent(locPdop);
+				}
+		}
+		return locElement;
+	}
+	
+	/**
+	 * Methode qui ajoute la localisation a partir de l'element JDOM passe en parametre
+	 * Utilise les attributs de classe FILE_DIRECTORY et FILE_NAME comme chemin pour le fichier a reecrire
+	 * @param loc - Element JDOM representant la nouvelle position
+	 * @return true
+	 */
+	public boolean addLocation(Element loc) {
+	    // Parsing
+		SAXBuilder saxBuilder = new SAXBuilder();
+		Document document = new Document(new Element("temp"));
+	    try {
+	    	// On creer un nouveau document JDOM avec en argument le fichier GPX
+	        document = saxBuilder.build(new FileInputStream(new File(FILE_DIRECTORY+"/"+FILE_NAME)));
+	        
+	        Element racine = document.getRootElement();
+		    List<Element> trkList = racine.getChildren("trk", ns);
+		    List<Element> trksegList = trkList.get(trkList.size()-1).getChildren("trkseg", ns);
+		    Element trkseg = trksegList.get(trksegList.size()-1);
+		    trkseg.addContent(loc);
+	    } catch(Exception e) {
+	    	Log.e(TAG, e.getMessage());
+	    }
+	    // Partie enregistrement dans le Fichier
+	    XMLOutputter xmlOutput = new XMLOutputter(Format.getPrettyFormat());
+	    try {
+	    	xmlOutput.output(document, openFileOutput(FILE_NAME, MODE_WORLD_READABLE));
+	    } catch (FileNotFoundException e) {
+	    	Log.e(TAG, e.toString());
+	    } catch (IOException ioe) {
+	    	Log.e(TAG, ioe.toString());
+	    }
+	    
+		return true;
+	}
+	
+	/*
+	 * Toutes les methodes abstraites de Service 
+	 */
 	@Override
 	public IBinder onBind(Intent arg0)
 	{
@@ -242,68 +436,64 @@ public class TrackService extends Service
 		 */
 		super.onStartCommand(intent, flags, startId);
 		
-		Bundle extras = intent.getExtras();
-		directory = extras.getString("directory");
-		fileName = extras.getString("fileName");
+		//Bundle extras = intent.getExtras(); //directory = extras.getString("directory"); //fileName = extras.getString("fileName");
 		
 		Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
-		Message msg = mServiceHandler.obtainMessage();
-		msg.arg1 = startId;
-		mServiceHandler.sendMessage(msg);
 		
 		/*
 		 * Partie Notification + foreground
 		 */
-		/*Notification notification = new Notification(R.drawable.ic_action_refresh, "tickerTest", System.currentTimeMillis());
-        Intent notificationIntent = new Intent(MainActivity.this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, notificationIntent, 0);
-        notification.setLatestEventInfo(MainActivity.this, "Titre", "Message", pendingIntent);*/
-		Log.i(TAG, "Received Start Foreground Intent ");
+		Intent notificationIntent = new Intent(this, fr.rt.acy.locapic.MainActivity.class);
+		notificationIntent.setAction("MainActivity");
+		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 		
-		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-		
-			Intent notificationIntent = new Intent(this, MainActivity.class);
-			notificationIntent.setAction("MainActivity");
-			notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-			PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-			
-	        Notification notif = new Notification.Builder(this)
-	        .setTicker("Debut de l'enregistrement de la trace gps...")
-	        .setContentTitle("LocaPic - Itinerance")
-	        .setContentText("Vos deplacements sont enregistres")
-	        .setSmallIcon(R.drawable.ic_launcher)
-	        .setContentIntent(pendingIntent)
-	        .setOngoing(true).getNotification();
-	        
-	        startForeground(2, notif);
+        Notification notif = new Notification.Builder(this)
+        .setTicker("Debut de l'enregistrement de la trace gps...")
+        .setContentTitle("LocaPic - Itinerance")
+        .setContentText("Vos deplacements sont enregistres")
+        .setSmallIcon(R.drawable.ic_launcher)
+        .setContentIntent(pendingIntent)
+        .setOngoing(true).getNotification();
+        
+        startForeground(2, notif);
 		/*
 		 * 
 		 */
 		return START_REDELIVER_INTENT;
 	}
+	/**
+	 * 
+	 */
 	@Override
 	public void onCreate()
 	{
 		Log.v(TAG, "onCreate");
 		/**
-		 * Gestion Service
+		 * Gestion du Service
 		 */
 		HandlerThread thread = new HandlerThread("trackServiceHandlerThread", Process.THREAD_PRIORITY_DEFAULT);
 		thread.start();
-
-		mServiceLooper = thread.getLooper();
-		mServiceHandler = new ServiceHandler(mServiceLooper);
 		
 		/**
-		 * Gestion itineraire
+		 * Gestion de l'itineraire
 		 */
 		pref = PreferenceManager.getDefaultSharedPreferences(this);
-		LOCATION_INTERVAL = Integer.parseInt(pref.getString("LOCATION_INTERVAL", "2000"))*1000;
+		LOCATION_INTERVAL = Integer.parseInt(pref.getString("LOCATION_INTERVAL", "2"))*1000;
 		LOCATION_DISTANCE = Integer.parseInt(pref.getString("LOCATION_DISTANCE", "0"));
+		TRACKING = pref.getBoolean("TRACKING", true);
+		
+		Document document = createGpxDocTree(pref.getString("TRACK_NAME", null),
+				pref.getString("TRACK_DESC", null),
+				pref.getString("AUTHORS_NAME", null),
+				pref.getString("AUTHORS_EMAIL", null),
+				pref.getString("TRACK_KEYWORDS", null));
+		saveFile(document);
+		
 		initializeLocationManager();
 		try {
-			mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,	mLocationListeners);
-			mLocationManager.addNmeaListener(mNMEAListener);
+			mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,	this);//mLocationListeners
+			mLocationManager.addNmeaListener(this);//mNMEAListener
 		} catch (java.lang.SecurityException ex) {
 			Log.i(TAG, "fail to request location update, ignore", ex);
 		} catch (IllegalArgumentException ex) {
@@ -314,18 +504,20 @@ public class TrackService extends Service
 	public void onDestroy()
 	{
 		Log.v(TAG, "onDestroy");
-		super.onDestroy();
 		if (mLocationManager != null) {
 			try {
-				mLocationManager.removeUpdates(mLocationListeners);
-				mLocationManager.removeNmeaListener(mNMEAListener);
+				mLocationManager.removeUpdates(this);
+				mLocationManager.removeNmeaListener(this);
 			} catch (Exception ex) {
 				Log.i(TAG, "fail to remove location listners, ignore", ex);
 			}
 		}
-		SharedPreferences.Editor prefEditor = PreferenceManager.getDefaultSharedPreferences(this).edit();
-		prefEditor.putBoolean("RECORDING2", false);
+		TRACKING = false;
+		prefEditor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+		prefEditor.putBoolean("TRACKING", TRACKING);
 		prefEditor.commit();
+		
+		super.onDestroy();
 	}
 	private void initializeLocationManager() {
 		Log.v(TAG, "initializeLocationManager");
@@ -337,4 +529,45 @@ public class TrackService extends Service
 	protected void onHandleIntent(Intent intent) {
 		
 	}*/
+
+	@Override
+	public void onNmeaReceived(long timestamp, String nmea) {
+		Log.v(TAG, "NMEA beg :=> "+nmea.substring(0, 6));
+		if(nmea.substring(0, 6).equals("$GPGSA")) {
+			GSA = nmea;
+		}		
+	}
+
+	@Override
+	public void onLocationChanged(Location location) {
+		Log.v(TAG, "onLocationChanged: " + location);
+		//mLastLocation.set(location);
+		Log.d(TAG, "onLocationChanged ; test = "+test);
+		test++;
+		/*
+		 * Save
+		 */
+		//Log.v(TAG, "Extra : directory => "+directory+" ; file name : "+fileName);
+		Log.v(TAG, "NMEA : GSA => "+GSA);
+		mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+		//mLocationManager.addNmeaListener(this);
+		if(location != null) {
+			Log.v(TAG, "Latitude " + location.getLatitude() + " et longitude " + location.getLongitude());
+			addLocation(createLocationElement(location));
+		} else {
+			Log.v(TAG, "Loc == null");
+		}		
+	}
+
+	@Override
+	public void onProviderDisabled(String provider) {
+	}
+
+	@Override
+	public void onProviderEnabled(String provider) {
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+	}
 }
