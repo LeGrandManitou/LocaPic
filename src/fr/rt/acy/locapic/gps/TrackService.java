@@ -44,7 +44,7 @@ public class TrackService extends Service implements android.location.LocationLi
 	 * Attributs du service
 	 */
 	private static final String TAG = "trackService";
-	private LocationManager mLocationManager = null;
+	private LocationManager locationManager = null;
 	private static int LOCATION_INTERVAL = 2000;
 	private static float LOCATION_DISTANCE = 0; //10f
 	private static int test = 0;
@@ -52,8 +52,8 @@ public class TrackService extends Service implements android.location.LocationLi
 	private SharedPreferences pref;
 	private Namespace ns = Namespace.getNamespace("http://www.topografix.com/GPX/1/1");
 	private static boolean TRACKING = false;
-	private static String FILE_DIRECTORY;
 	private static String FILE_NAME;
+	private static boolean FILE_EXT = false;  
 	private final String EXT_FILES_DIR = Environment.getExternalStorageDirectory().getPath() + "/MyTracks/";
 	private SharedPreferences.Editor prefEditor;
 	
@@ -258,15 +258,15 @@ public class TrackService extends Service implements android.location.LocationLi
 			// Si il y a un media externe et si le media externe n'est pas en lecture seule
 			if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
 					&& !Environment.MEDIA_MOUNTED_READ_ONLY.equals(Environment.getExternalStorageState())) {
-				// Creation du repertoire (si c'est la premiere fois par exemple)
+				FILE_EXT = true;
+				// Creation du repertoire (pour si c'est la premiere fois par exemple)
 				File trackFile = new File(EXT_FILES_DIR);
 				trackFile.mkdir();
 				// Sauvegarde du repertoire et du nom de fichier dans des attributs de classe
-				FILE_DIRECTORY = trackFile.getAbsolutePath();
-				FILE_NAME = FILE_DIRECTORY+createFilename(FILE_DIRECTORY, dateNow);
+				FILE_NAME = createFilename(EXT_FILES_DIR, dateNow);
 				// Creation du nom de fichier a utilise en fonction du contenu du repertoire
 				// Reutilisation de trackFile pour creer le fichier (objet java)
-				trackFile = new File(FILE_NAME);
+				trackFile = new File(EXT_FILES_DIR+FILE_NAME);
 				// Creation du fichier
 				trackFile.createNewFile();
 				// Ouverture d'un flux sortant vers le fichier
@@ -277,10 +277,10 @@ public class TrackService extends Service implements android.location.LocationLi
 				if(output != null)
 					output.close();
 			} else {
+				FILE_EXT = false;
 				/* Sinon utilisation du stockage interne */
 				// Sauvegarde du repertoire et du nom de fichier dans des attributs de classe
-				FILE_DIRECTORY = getFilesDir().getAbsolutePath();
-				FILE_NAME = createFilename(FILE_DIRECTORY, dateNow);
+				FILE_NAME = createFilename(getFilesDir().getAbsolutePath(), dateNow);
 				// Creation du nom de fichier a utilise en fonction du contenu du repertoire
 				// Ouverture d'un flux sortant vers le fichier - Fichier lisible par tout le monde car fichier pour l'utilisateur
 				FileOutputStream output = openFileOutput(FILE_NAME, MODE_WORLD_READABLE);
@@ -290,7 +290,7 @@ public class TrackService extends Service implements android.location.LocationLi
 				if(output != null)
 					output.close();
 			}
-			Log.v(TAG, "Files dir : "+FILE_DIRECTORY);
+			Log.v(TAG, "Files name : "+FILE_NAME);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -330,7 +330,7 @@ public class TrackService extends Service implements android.location.LocationLi
 		formattedDateBuilder.append("Z");
 		formattedDateBuilder.insert(10, "T");
 		String formattedDate = formattedDateBuilder.toString();
-		Log.v(TAG, "TIME => "+formattedDate);
+		//Log.v(TAG, "TIME => "+formattedDate);
 		// Ajout de la date a l'element
 		Element locTime = new Element("time", ns);
 		locTime.setText(formattedDate);
@@ -396,7 +396,10 @@ public class TrackService extends Service implements android.location.LocationLi
 		Document document = new Document(new Element("temp"));
 	    try {
 	    	// On creer un nouveau document JDOM avec en argument le fichier GPX
-	        document = saxBuilder.build(new FileInputStream(new File(FILE_DIRECTORY+"/"+FILE_NAME)));
+	    	if (!FILE_EXT)
+	    		document = saxBuilder.build(openFileInput(FILE_NAME));
+	    	else
+	    		document = saxBuilder.build(new FileInputStream(new File(EXT_FILES_DIR+FILE_NAME)));
 	        
 	        Element racine = document.getRootElement();
 		    List<Element> trkList = racine.getChildren("trk", ns);
@@ -408,8 +411,12 @@ public class TrackService extends Service implements android.location.LocationLi
 	    }
 	    // Partie enregistrement dans le Fichier
 	    XMLOutputter xmlOutput = new XMLOutputter(Format.getPrettyFormat());
+	    Log.d(TAG, "addLocation : FILE_EXT = "+FILE_EXT);
 	    try {
-	    	xmlOutput.output(document, openFileOutput(FILE_NAME, MODE_WORLD_READABLE));
+	    	if (!FILE_EXT)
+	    		xmlOutput.output(document, openFileOutput(FILE_NAME, MODE_WORLD_READABLE));
+	    	else
+	    		xmlOutput.output(document, new FileOutputStream(EXT_FILES_DIR+FILE_NAME));
 	    } catch (FileNotFoundException e) {
 	    	Log.e(TAG, e.toString());
 	    } catch (IOException ioe) {
@@ -492,8 +499,8 @@ public class TrackService extends Service implements android.location.LocationLi
 		
 		initializeLocationManager();
 		try {
-			mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,	this);//mLocationListeners
-			mLocationManager.addNmeaListener(this);//mNMEAListener
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,	this);//locationListeners
+			locationManager.addNmeaListener(this);//mNMEAListener
 		} catch (java.lang.SecurityException ex) {
 			Log.i(TAG, "fail to request location update, ignore", ex);
 		} catch (IllegalArgumentException ex) {
@@ -504,10 +511,11 @@ public class TrackService extends Service implements android.location.LocationLi
 	public void onDestroy()
 	{
 		Log.v(TAG, "onDestroy");
-		if (mLocationManager != null) {
+		if (locationManager != null) {
+			Log.v(TAG, "onDestroy => lm != null");
 			try {
-				mLocationManager.removeUpdates(this);
-				mLocationManager.removeNmeaListener(this);
+				locationManager.removeUpdates(this);
+				locationManager.removeNmeaListener(this);
 			} catch (Exception ex) {
 				Log.i(TAG, "fail to remove location listners, ignore", ex);
 			}
@@ -518,11 +526,13 @@ public class TrackService extends Service implements android.location.LocationLi
 		prefEditor.commit();
 		
 		super.onDestroy();
+		stopSelf();
 	}
+	
 	private void initializeLocationManager() {
 		Log.v(TAG, "initializeLocationManager");
-		if (mLocationManager == null) {
-			mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+		if (locationManager == null) {
+			locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
 		}
 	}
 /*	@Override
@@ -532,7 +542,7 @@ public class TrackService extends Service implements android.location.LocationLi
 
 	@Override
 	public void onNmeaReceived(long timestamp, String nmea) {
-		Log.v(TAG, "NMEA beg :=> "+nmea.substring(0, 6));
+		//Log.v(TAG, "NMEA beg :=> "+nmea.substring(0, 6));
 		if(nmea.substring(0, 6).equals("$GPGSA")) {
 			GSA = nmea;
 		}		
@@ -541,21 +551,15 @@ public class TrackService extends Service implements android.location.LocationLi
 	@Override
 	public void onLocationChanged(Location location) {
 		Log.v(TAG, "onLocationChanged: " + location);
-		//mLastLocation.set(location);
-		Log.d(TAG, "onLocationChanged ; test = "+test);
+		//Log.d(TAG, "onLocationChanged ; test = "+test);
 		test++;
-		/*
-		 * Save
-		 */
-		//Log.v(TAG, "Extra : directory => "+directory+" ; file name : "+fileName);
-		Log.v(TAG, "NMEA : GSA => "+GSA);
-		mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-		//mLocationManager.addNmeaListener(this);
+		//Log.v(TAG, "NMEA : GSA => "+GSA);
+		locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 		if(location != null) {
-			Log.v(TAG, "Latitude " + location.getLatitude() + " et longitude " + location.getLongitude());
+			//Log.v(TAG, "Latitude " + location.getLatitude() + " et longitude " + location.getLongitude());
 			addLocation(createLocationElement(location));
 		} else {
-			Log.v(TAG, "Loc == null");
+			//Log.v(TAG, "Loc == null");
 		}		
 	}
 
