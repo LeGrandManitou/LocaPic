@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.FrameLayout;
@@ -82,13 +83,18 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private int retardateur = 0;            	// Retardateur en secondes (0 par defaut)
 	private List<Size> supportedPictureSizes; 	// Taille de l'appareil photo supporte
 	
+	// Multitouch
+	// CoordonnÃ©es de l'origine du pointer (= du doigt) <=> dernierre coordonnees du pointeur
+	private float downX;
+	private float downY;
+	
 	public enum Orientation 
 	{
 		PORTRAIT("Portrait", 90, 0), PAYSAGE_0("Paysage 0", 0, 90), PAYSAGE_180("Paysage 180", 180, -90);
 		
 		private String nom;
 		private int degree;
-		/* rotation a effectuer pour passer une View créée
+		/* rotation a effectuer pour passer une View crï¿½ï¿½e
 		 *  en paysage dans la nouvelle orientation d'ecran */
 		private int rotation;
 		
@@ -266,6 +272,7 @@ public class CameraActivity extends Activity implements SensorEventListener
     	super.onDestroy();
     }
     
+    
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) 
     {
@@ -296,6 +303,51 @@ public class CameraActivity extends Activity implements SensorEventListener
     	super.onActivityResult(requestCode, resultCode, data);
     }
     
+    @Override
+    public boolean onTouchEvent(MotionEvent event) 
+    {
+    	int action = event.getAction();
+    	
+    	switch (action & MotionEvent.ACTION_MASK) 
+		{
+			case MotionEvent.ACTION_DOWN:
+				
+				//Log.v(TAG, "X : " + String.valueOf(event.getX()));
+		    	//Log.v(TAG, "Y : " + String.valueOf(event.getY()));
+		    	
+		    	downX = event.getX();
+		    	downY = event.getY();
+				break;
+			case MotionEvent.ACTION_MOVE:
+				float x, y, curentX, currentY;
+				
+				curentX = event.getX();
+				currentY = event.getY();
+				
+				x = curentX - downX;
+				y = currentY - downY;
+				
+				downX = curentX;
+				downY = currentY;
+				
+				//Log.v(TAG, "X : " + String.valueOf(x));
+		    	//Log.v(TAG, "Y : " + String.valueOf(y));
+		    	
+		    	//float d = (float) Math.sqrt( x*x + y*y);
+		    	//Log.v(TAG, "-> " + String.valueOf(d));
+		    	
+				break;
+			default:
+				break;
+		}
+
+    		
+    		
+    		
+    	
+    	return true;
+    }
+    
 	@Override
 	public void onSensorChanged(SensorEvent event) 
 	{
@@ -312,7 +364,7 @@ public class CameraActivity extends Activity implements SensorEventListener
 			// z de 180 a 0 : 90 = telephone vertical, 0 horizontal(ecran vers le haut)
 			// et 180 horizontal (ecran vers le bas)
 			orientation = (z * -90) + 90; 	
-			//Log.v(TAG, "Orientation : " + String.valueOf(orientation) + " °"); // DEBUG
+			//Log.v(TAG, "Orientation : " + String.valueOf(orientation) + " ï¿½"); // DEBUG
 			
 			
 			// Orientation ecran
