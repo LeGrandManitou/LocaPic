@@ -515,7 +515,7 @@ public class TrackService extends Service implements android.location.LocationLi
 		initializeLocationManager();
 		try {
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,	this);//locationListeners
-			locationManager.addNmeaListener(this);//mNMEAListener
+			locationManager.addNmeaListener(this);
 		} catch (java.lang.SecurityException ex) {
 			Log.i(TAG, "fail to request location update, ignore", ex);
 		} catch (IllegalArgumentException ex) {
@@ -525,17 +525,17 @@ public class TrackService extends Service implements android.location.LocationLi
 	@Override
 	public void onDestroy()
 	{
-		//Log.v(TAG, "onDestroy");
+		Log.v(TAG, "onDestroy - 1");
 		if (locationManager != null) {
-			Log.v(TAG, "onDestroy => lm != null");
+			//Log.v(TAG, "onDestroy => lm != null");
 			try {
 				locationManager.removeUpdates(this);
 				locationManager.removeNmeaListener(this);
 			} catch (Exception ex) {
-				Log.i(TAG, "fail to remove location listners, ignore", ex);
+				Log.e(TAG, "fail to remove location listners, ignore", ex);
 			}
 		} else
-			Log.v(TAG, "onDestroy => lm == null");
+			Log.w(TAG, "onDestroy => lm == null");
 		
 		TRACKING = false;
 		prefEditor = PreferenceManager.getDefaultSharedPreferences(this).edit();
@@ -549,7 +549,7 @@ public class TrackService extends Service implements android.location.LocationLi
 	private void initializeLocationManager() {
 		//Log.v(TAG, "initializeLocationManager");
 		if (locationManager == null) {
-			locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+			locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 		}
 	}
 /*	@Override

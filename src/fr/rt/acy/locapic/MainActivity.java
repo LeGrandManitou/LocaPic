@@ -42,7 +42,7 @@ public class MainActivity extends Activity
 	private LocationManager lm = null;
 	private final String GPX_BASE = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n<gpx version=\"1.1\">\n\t<metadata>\n\t\t<name>Android GPS receiver track</name>\n\t\t<desc>GPS track logged on an Android device with an application from a project by Samuel Beaurepaire &amp; Virgile Beguin for IUT of Annecy (Fr), RT departement.</desc>\n\t\t<time></time>\n\t\t<author>\n\t\t\t<name>Samuel Beaurepaire</name>\n\t\t\t<email id=\"sjbeaurepaire\" domain=\"orange.fr\" />\n\t\t</author>\n\t\t<keywords></keywords>\n\t</metadata>\n\n\t<trk>\n\t</trk>\n</gpx>";
 	private final String FILES_DIR = Environment.getExternalStorageDirectory().getPath() + "/TracesGPS/";
-	//private Intent serviceIntent; //TODO Tests stopService + NETWORK provider pour demo + logo + intents
+	//TODO NETWORK provider et interface pour demo + logo + intents
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) 
@@ -118,9 +118,9 @@ public class MainActivity extends Activity
 				 * + Edition de la preference
 				 */
 				// Arret du service
-				//serviceIntent.putExtra("STOP", true);
-				serviceIntent.setAction("fr.rt.acy.locapic.STOP");
-				sendBroadcast(serviceIntent);
+				serviceIntent.putExtra("STOP", true);
+				//serviceIntent.setAction("fr.rt.acy.locapic.STOP");
+				//sendBroadcast(serviceIntent);
 				stopService(serviceIntent);
 				// Gestion de la preference (pour savoir si record en cours ou pas)
 				tracking = false;
