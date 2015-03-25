@@ -95,7 +95,7 @@ public class MainActivity extends Activity
 					prefEditor.putBoolean("TRACKING", tracking);
 					prefEditor.commit();
 					// Changement du bouton
-					button_tracking.setText("Stopper l'itinerance (service)");
+					button_tracking.setText(R.string.button_tracking_on);
 				} else {
 					/**
 					 * Si GPS pas actif
@@ -120,7 +120,7 @@ public class MainActivity extends Activity
 				prefEditor.putBoolean("TRACKING", tracking);
 				prefEditor.commit();
 				// Changement du bouton
-				button_tracking.setText("Lancer l'itinerance (service)");
+				button_tracking.setText(R.string.button_tracking_off);
 			}
 		}
 	};
@@ -132,7 +132,7 @@ public class MainActivity extends Activity
     {
     	Intent intentCamera = new Intent(this, CameraActivity.class);
     	startActivity(intentCamera);
-    	finish();
+    	//finish();
     }
 
     @Override
