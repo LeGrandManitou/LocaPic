@@ -81,6 +81,7 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private Flash flashMode = Flash.AUTO;   	// Mode du flash et valeur par defaut
 	private int retardateur = 0;            	// Retardateur en secondes (0 par defaut)
 	private List<Size> supportedPictureSizes; 	// Taille de l'appareil photo supporte
+	private int indexCameraSizeSelected = 0;	// index dans supportedPictureSizes de la taille selectionné
 	
 	// Multitouch
 	// CoordonnÃ©es du pointeur initial
@@ -224,6 +225,8 @@ public class CameraActivity extends Activity implements SensorEventListener
     {
     	if (requestCode == REQUEST_CODE_POPUP_FAST_SETTINGS)
     	{
+    		indexCameraSizeSelected = data.getIntExtra("indexCameraSizeSelected", 0);
+    		Size cameraSizeSelected = supportedPictureSizes.get(indexCameraSizeSelected);
     		retardateur = data.getIntExtra("retardateur", 0);
     		flashMode = (Flash) data.getExtras().get("flashMode");
     		
@@ -243,6 +246,8 @@ public class CameraActivity extends Activity implements SensorEventListener
 	    		// flash OFF
 	    		param.setFlashMode(Parameters.FLASH_MODE_OFF);
 	    	}
+    		
+    		param.setPictureSize(cameraSizeSelected.width, cameraSizeSelected.height);
     		
     		camera.setParameters(param);
     	}
@@ -535,7 +540,15 @@ public class CameraActivity extends Activity implements SensorEventListener
         // On passe la valeur actuel des parametres en extra
         fastSettingsIntent.putExtra("flashMode", flashMode);
         fastSettingsIntent.putExtra("retardateur", retardateur);
-        //fastSettingsIntent.putExtra("supportedPictureSizes", supportedPictureSizes.toArray());
+		
+		int[] sizes = new int[supportedPictureSizes.size()*2];
+		for (int i = 0; i < supportedPictureSizes.size(); i+=2) 
+		{
+			sizes[i] = supportedPictureSizes.get(i).width;
+			sizes[i+1] = supportedPictureSizes.get(i).height;
+		}
+		fastSettingsIntent.putExtra("supportedPictureSizes", sizes);
+		fastSettingsIntent.putExtra("indexCameraSizeSelected", indexCameraSizeSelected);
 
         startActivityForResult(fastSettingsIntent, REQUEST_CODE_POPUP_FAST_SETTINGS);
     }
@@ -624,27 +637,9 @@ public class CameraActivity extends Activity implements SensorEventListener
         camera.startPreview(); // On redemarre le preview
     }
 
-    // TODO Recuperation flash et retardateur
-    @Override
-    protected void onSaveInstanceState(Bundle outState)
-    {
-    	//outState.putString("cheminPhoto", cheminPhoto);
-
-    	super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState)
-    {
-    	super.onRestoreInstanceState(savedInstanceState);
-
-    	//cheminPhoto = savedInstanceState.getString("cheminPhoto");
-    }
-
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy)
     {
 
     }
-    
 }

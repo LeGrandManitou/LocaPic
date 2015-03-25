@@ -1,5 +1,7 @@
 package fr.rt.acy.locapic.camera;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,12 +25,17 @@ public class FastSettingsActivity extends Activity
 	// Retardateur en seconde
 	private int retardateur = 0;
 	
+	private ArrayList<CameraSize> supportedPictureSizes = new ArrayList<>();
+	private int indexCameraSizeSelected = 0;
+	
 	// Indique le reglage du retardateur
 	private TextView retardateurTexte;
 	// Bar selection du retardateur
 	private SeekBar seekBar;
 
 	private Spinner spinnerFlash;
+	private Spinner spinnerResolution;
+
 	
 	// Intent retourne a l'activite principal
 	private Intent returnIntent;
@@ -42,13 +49,22 @@ public class FastSettingsActivity extends Activity
 		// initialiser flash et retardateur
 		flashMode = (Flash) getIntent().getExtras().get("flashMode");
 		retardateur = getIntent().getExtras().getInt("retardateur");
-		//Size [] supportedPictureSizes = (Size[]) getIntent().getExtras().get("supportedPictureSizes");
+		indexCameraSizeSelected = getIntent().getIntExtra("indexCameraSizeSelected", 0);
+		
+		int[] tmpSizes = getIntent().getIntArrayExtra("supportedPictureSizes");
+		
+		for (int i = 0; i < tmpSizes.length; i+=2) 
+		{
+			if (tmpSizes[i]!= 0 && tmpSizes[i+1] != 0)
+				supportedPictureSizes.add(new CameraSize(tmpSizes[i], tmpSizes[i+1]));
+		}
 		
 		// on initialise la valeur par defaut du texte du seekbar
 		retardateurTexte = (TextView) findViewById(R.id.retardateurText);
 		retardateurTexte.setText(String.valueOf(retardateur) + " sec");
 		
 		spinnerFlash = (Spinner) findViewById(R.id.spinnerFlash);
+		spinnerResolution = (Spinner) findViewById(R.id.spinnerResolution);
 		
 		ArrayAdapter<CharSequence> arrayAdapter = ArrayAdapter.createFromResource(this, R.array.flashMode, android.R.layout.simple_spinner_item);
 		arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -71,6 +87,22 @@ public class FastSettingsActivity extends Activity
 			}
 		});
 		
+		ArrayAdapter<CameraSize> arrayAdapter2 = new ArrayAdapter<>(this,
+								android.R.layout.simple_spinner_item, supportedPictureSizes);
+		spinnerResolution.setAdapter(arrayAdapter2);
+		spinnerResolution.setSelection(indexCameraSizeSelected);
+		spinnerResolution.setOnItemSelectedListener(new OnItemSelectedListener() 
+		{
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) 
+			{
+				indexCameraSizeSelected = position;
+			}
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0) {
+			}
+		});
+		
 		
 		seekBar = (SeekBar) findViewById(R.id.retardateur);
 		// listener du seekBar
@@ -80,7 +112,6 @@ public class FastSettingsActivity extends Activity
 			public void onStopTrackingTouch(SeekBar seekBar) {}
 			@Override
 			public void onStartTrackingTouch(SeekBar seekBar) {}
-			
 			@Override
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) 
 			{
@@ -104,6 +135,7 @@ public class FastSettingsActivity extends Activity
 		// On met en extra les differents parametres
 		returnIntent.putExtra("flashMode", flashMode);
 		returnIntent.putExtra("retardateur", retardateur);
+		returnIntent.putExtra("indexCameraSizeSelected", indexCameraSizeSelected);
 		setResult(Activity.RESULT_OK, returnIntent);
 	}
 	
