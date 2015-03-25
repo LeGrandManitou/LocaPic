@@ -30,7 +30,6 @@ import android.view.View.OnClickListener;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.Toast;
-import android.widget.ZoomControls;
 import fr.rt.acy.locapic.R;
 
 //on supprime les warnings a cause de la classe Camera depreciee a partir de l'api 21
@@ -48,12 +47,12 @@ public class CameraActivity extends Activity implements SensorEventListener
 
 	private String cheminPhoto = null;      // Chemin de la dernier photo enregistree
 	private Camera camera;                  // Camera utillisee
+	
+	// Boutons
 	private PreviewCamera previewCamera;    // preview de la camera
 	private ImageButton fastSettingsButton; // bouton fastSettings (activation du flash, retardateur, ...)
 	private ImageButton prendrePhotoButton;
-	private ImageButton zoomButton;
-    private ZoomControls zoomControls;		// bouton de control du zoom
-    private int currentZoom = 0;			// niveau de zoom actuel
+	private ImageButton retourButton;
     private int maxZoom = 0;				// niveau de zoom maximum. Affecte dans le onCreate
     private boolean isZoomSupported = false;
     
@@ -84,7 +83,7 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private List<Size> supportedPictureSizes; 	// Taille de l'appareil photo supporte
 	
 	// Multitouch
-	// Coordonnées de l'origine du pointer (= du doigt) <=> dernierre coordonnees du pointeur
+	// Coordonnées du pointeur initial
 	private float downX;
 	private float downY;
 	
@@ -127,6 +126,8 @@ public class CameraActivity extends Activity implements SensorEventListener
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+        
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
 
         // On active la camera par defaut
         try 
@@ -151,66 +152,11 @@ public class CameraActivity extends Activity implements SensorEventListener
         previewCamera.setKeepScreenOn(true);                // Garder l'ecran allume
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(previewCamera);
-
-        // Zoom controls
-        zoomControls = (ZoomControls) findViewById(R.id.zoomControl);
-        if (isZoomSupported)
-        {
-            zoomControls.setIsZoomInEnabled(true);
-            zoomControls.setIsZoomOutEnabled(false);
-            zoomControls.setOnZoomInClickListener(new View.OnClickListener()
-            {
-                @Override
-                public void onClick(View v)
-                {
-                    zoomControls.setIsZoomOutEnabled(true);
-                    if (currentZoom < maxZoom)
-                        currentZoom ++;
-
-                    if (currentZoom >= maxZoom)
-                    {
-                        zoomControls.setIsZoomInEnabled(false);
-                        currentZoom = maxZoom;
-                    }
-
-                    Camera.Parameters params = camera.getParameters();
-                    params.setZoom(currentZoom);
-                    camera.setParameters(params);
-                }
-            });
-            zoomControls.setOnZoomOutClickListener(new View.OnClickListener()
-            {
-                @Override
-                public void onClick(View v)
-                {
-                    zoomControls.setIsZoomInEnabled(true);
-                    if (currentZoom > 0)
-                        currentZoom --;
-
-                    if (currentZoom <= 0)
-                    {
-                        zoomControls.setIsZoomOutEnabled(false);
-                        currentZoom = 0;
-                    }
-                    
-                    // Affecter le niveau de zoom
-                    Camera.Parameters params = camera.getParameters();
-                    params.setZoom(currentZoom);
-                    camera.setParameters(params);
-                }
-            });
-        }
-        else
-        {
-        	// Si le zoom n'est pas supporté, faire disparaitre les boutons du zoom
-            zoomControls.setVisibility(View.GONE);
-            Toast.makeText(this, R.string.zoomNotSupported, Toast.LENGTH_LONG).show();
-        }
         
         // Boutons
         prendrePhotoButton = (ImageButton) findViewById(R.id.prendrePhoto);
         fastSettingsButton = (ImageButton) findViewById(R.id.fastSettings);
-        zoomButton = (ImageButton) findViewById(R.id.zoom);
+        retourButton = (ImageButton) findViewById(R.id.retour);
         
         prendrePhotoButton.setOnClickListener(new OnClickListener() 
         {
@@ -228,12 +174,12 @@ public class CameraActivity extends Activity implements SensorEventListener
 				showFastSettingsDialog();
 			}
 		});
-        zoomButton.setOnClickListener(new OnClickListener() 
+        retourButton.setOnClickListener(new OnClickListener() 
         {
 			@Override
-			public void onClick(View v)
+			public void onClick(View v) 
 			{
-				showZoomPopup();
+				finish();
 			}
 		});
         
@@ -306,45 +252,64 @@ public class CameraActivity extends Activity implements SensorEventListener
     @Override
     public boolean onTouchEvent(MotionEvent event) 
     {
-    	int action = event.getAction();
+    	final float sensitivity = 0.08f;	// sensibilité du multitouch
     	
-    	switch (action & MotionEvent.ACTION_MASK) 
+    	switch (event.getAction()) 
 		{
 			case MotionEvent.ACTION_DOWN:
+				// Si l'ecran est touché
 				
-				//Log.v(TAG, "X : " + String.valueOf(event.getX()));
-		    	//Log.v(TAG, "Y : " + String.valueOf(event.getY()));
-		    	
+		    	// Enregistrer les coordonnées du 1er pointeur
 		    	downX = event.getX();
 		    	downY = event.getY();
 				break;
-			case MotionEvent.ACTION_MOVE:
-				float x, y, curentX, currentY;
 				
+			case MotionEvent.ACTION_MOVE:
+				// Si le(s) pointeur(s) a bougé 
+				
+				float x, y;					// difference entre le touché initial et le pointeur actuel
+				float curentX, currentY; 	// Coordonnée du pointeur actuel
+				
+				// Recuperer les coordonnées actuel du pointeur
 				curentX = event.getX();
 				currentY = event.getY();
 				
+				// Recuperer le difference entre le pointeur initial et le pointeur actuel
 				x = curentX - downX;
 				y = currentY - downY;
 				
+				// Le pointeur actuel de vient le pointeur initial
 				downX = curentX;
 				downY = currentY;
 				
-				//Log.v(TAG, "X : " + String.valueOf(x));
-		    	//Log.v(TAG, "Y : " + String.valueOf(y));
+				float move = (float) x-y;
 		    	
-		    	//float d = (float) Math.sqrt( x*x + y*y);
-		    	//Log.v(TAG, "-> " + String.valueOf(d));
-		    	
-				break;
+		    	if (event.getPointerCount() > 1)	// si au moins 2 pointeurs sont detectés :
+		    	{
+		    		int currentZoom = getZoom();	// niveau de zoom actuel
+		    		int maxZoom = getMaxZoom();		// niveau maximum de zoom supporté par la camera
+			    	
+		    		// niveau de zoom a affecter a la camera
+		    		int zoom = (int) ((currentZoom + (move * sensitivity)));
+			    	
+			    	// Controler que le niveau de zoom ne depasse pas les limites de la camera
+			    	if (zoom > maxZoom)
+			    	{
+			    		zoom = maxZoom;
+			    	}
+			    	else if (zoom < 0)
+			    	{
+			    		zoom = 0;
+			    	}
+			    	// Affecter le zoom a la camera
+			    	setZoom(zoom);	
+			    	//Log.v(TAG, "-> " + String.valueOf(zoom)); //Debug
+		    	}
+		    	break;
 			default:
 				break;
 		}
 
-    		
-    		
-    		
-    	
     	return true;
     }
     
@@ -425,6 +390,34 @@ public class CameraActivity extends Activity implements SensorEventListener
         // On met dans l'atribut cheminPhoto le chemin du fichier precedement cree
         cheminPhoto = photo.getAbsolutePath();
         return photo;
+    }
+    
+    private int getMaxZoom() 
+    {
+    	if (isZoomSupported)
+        {
+    		Camera.Parameters parameters = camera.getParameters();
+    		return parameters.getMaxZoom();
+        }
+        else
+        {
+            Toast.makeText(this, R.string.zoomNotSupported, Toast.LENGTH_LONG).show();
+            return -1;
+        }
+	}
+    
+    private int getZoom()
+    {
+    	if (isZoomSupported)
+        {
+    		Camera.Parameters params = camera.getParameters();
+    		return params.getZoom();
+        }
+        else
+        {
+            Toast.makeText(this, R.string.zoomNotSupported, Toast.LENGTH_LONG).show();
+            return -1;
+        }
     }
 
     /**
@@ -512,7 +505,6 @@ public class CameraActivity extends Activity implements SensorEventListener
         int rotation = orientation.getRotation();
         prendrePhotoButton.setRotation(rotation);
         fastSettingsButton.setRotation(rotation);
-        zoomButton.setRotation(rotation);
     }
     
     private void setZoom(int zoom)
@@ -524,8 +516,7 @@ public class CameraActivity extends Activity implements SensorEventListener
     			zoom = maxZoom;
     		}
 
-			currentZoom = zoom;
-    		Camera.Parameters params = camera.getParameters();
+			Camera.Parameters params = camera.getParameters();
     		params.setZoom(zoom);
     		camera.setParameters(params);
         }
@@ -547,18 +538,6 @@ public class CameraActivity extends Activity implements SensorEventListener
         //fastSettingsIntent.putExtra("supportedPictureSizes", supportedPictureSizes.toArray());
 
         startActivityForResult(fastSettingsIntent, REQUEST_CODE_POPUP_FAST_SETTINGS);
-    }
-
-    private void showZoomPopup()
-    {
-        if (zoomControls.getVisibility() == View.INVISIBLE)
-        {
-            zoomControls.setVisibility(View.VISIBLE);
-        }
-        else if (zoomControls.getVisibility() == View.VISIBLE)
-        {
-            zoomControls.setVisibility(View.INVISIBLE);
-        }
     }
 
     /**

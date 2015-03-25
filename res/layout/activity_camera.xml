@@ -30,10 +30,10 @@
             style="?android:attr/buttonBarStyle" >
 
             <ImageButton
-                android:id="@+id/zoom"
+                android:id="@+id/retour"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:src="@drawable/ic_action_search"
+                android:src="@drawable/ic_action_back"
                 android:layout_weight="1"
                 android:contentDescription="@string/zoom"
                 style="?android:attr/buttonBarButtonStyle" />
