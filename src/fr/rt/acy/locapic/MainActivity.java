@@ -25,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 public class MainActivity extends Activity 
@@ -36,6 +37,7 @@ public class MainActivity extends Activity
 	private boolean useNetworkPref = false;
 	private boolean notifPref = false;
 	private Button button_tracking = null;
+	private ImageButton image_button_tracking = null;
 	private boolean tracking = false;
 	private LocationManager lm = null;
 	private final String GPX_BASE = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n<gpx version=\"1.1\">\n\t<metadata>\n\t\t<name>Android GPS receiver track</name>\n\t\t<desc>GPS track logged on an Android device with an application from a project by Samuel Beaurepaire &amp; Virgile Beguin for IUT of Annecy (Fr), RT departement.</desc>\n\t\t<time></time>\n\t\t<author>\n\t\t\t<name>Samuel Beaurepaire</name>\n\t\t\t<email id=\"sjbeaurepaire\" domain=\"orange.fr\" />\n\t\t</author>\n\t\t<keywords></keywords>\n\t</metadata>\n\n\t<trk>\n\t</trk>\n</gpx>";
@@ -50,8 +52,10 @@ public class MainActivity extends Activity
         if (DEBUG_AUTO_START_INITENT.equals("camera")) 
         	startCamera(null);
             
-        button_tracking = (Button) findViewById(R.id.main_button_tracking);
-        button_tracking.setOnClickListener(trackingButtonListener);
+        //button_tracking = (Button) findViewById(R.id.main_button_tracking);
+        //button_tracking.setOnClickListener(trackingButtonListener);
+        image_button_tracking = (ImageButton) findViewById(R.id.main_button_tracking);
+        image_button_tracking.setOnClickListener(trackingButtonListener);
     }
     
     @Override
@@ -65,8 +69,10 @@ public class MainActivity extends Activity
 		tracking = pref.getBoolean("TRACKING", false);
 		useNetworkPref = pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false);
 		
-		if(tracking)
-			button_tracking.setText(R.string.button_tracking_on);
+		if(tracking) {
+			//button_tracking.setText(R.string.button_tracking_on);
+			image_button_tracking.setImageResource(R.drawable.ic_action_location_off);
+		}
 	}
     
     /**
@@ -95,7 +101,8 @@ public class MainActivity extends Activity
 					prefEditor.putBoolean("TRACKING", tracking);
 					prefEditor.commit();
 					// Changement du bouton
-					button_tracking.setText(R.string.button_tracking_on);
+					//button_tracking.setText(R.string.button_tracking_on);
+					image_button_tracking.setImageResource(R.drawable.ic_action_location_off);
 				} else {
 					/**
 					 * Si GPS pas actif
@@ -120,7 +127,8 @@ public class MainActivity extends Activity
 				prefEditor.putBoolean("TRACKING", tracking);
 				prefEditor.commit();
 				// Changement du bouton
-				button_tracking.setText(R.string.button_tracking_off);
+				//button_tracking.setText(R.string.button_tracking_off);
+				image_button_tracking.setImageResource(R.drawable.ic_action_location_found);
 			}
 		}
 	};
