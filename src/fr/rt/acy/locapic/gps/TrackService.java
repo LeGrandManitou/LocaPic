@@ -64,7 +64,7 @@ public class TrackService extends Service implements android.location.LocationLi
 	 * @param desc - Description du fichier gpx (pour les metadonnees GPX)
 	 * @param authorsName - Nom de l'autheur de la trace (pour les metadonnees GPX)
 	 * @param authorsEmail - Email de l'autheur de la trace (pour les metadonnees GPX)
-	 * @param keywords - Mots-clé pour les metadonnees GPX
+	 * @param keywords - Mots-cle pour les metadonnees GPX
 	 * @return document - Le document JDOM servant de base GPX
 	 */
 	public Document createGpxDocTree(String name, String desc, String authorsName, String authorsEmail, String keywords) {
@@ -310,6 +310,8 @@ public class TrackService extends Service implements android.location.LocationLi
 		locElement.setAttribute("lat", String.valueOf(loc.getLatitude()));
 		locElement.setAttribute("lon", String.valueOf(loc.getLongitude()));
 		
+		// Nature du fix (position GPS) : 2d ou 3d, utilise pour l'integration ou non de l'altitude, du vdop (et donc du pdop)
+		String locFix = "2d";
 		/*
 		 * Ajout de l'altitude
 		 */
@@ -317,6 +319,7 @@ public class TrackService extends Service implements android.location.LocationLi
 			Element locAltitude = new Element("ele", ns);
 			locAltitude.setText(String.valueOf(loc.getAltitude()));
 			locElement.addContent(locAltitude);
+			locFix = "3d";
 		}
 		/*
 		 * Creation de la date
@@ -349,37 +352,49 @@ public class TrackService extends Service implements android.location.LocationLi
 		String vdop = "";
 		
 		String nbSat = String.valueOf(loc.getExtras().getInt("satellites"));
-		String locFix = "2d";
 		// Si on a une chaine GSA
+		// chaine de test : GSA = "$GPGSA,A,2,19,28,14,18,27,22,31,39,,,,,1.7,1.0,1.3*35XX";
 		if(GSA != null) {
 			String[] gsarray = GSA.split(",");
 			pdop = gsarray[gsarray.length - 3];
 			hdop = gsarray[gsarray.length - 2];
 			vdop = gsarray[gsarray.length - 1].substring(0, gsarray[gsarray.length - 1].length() - 5);
-			if (gsarray[2] == "2" || gsarray[2] == "3")
+			// Si le fix dans la chaine vaut 2, on met 2d dans notre fix, si il vaut 3 ET qu'on a une altitude, on met 3d dans notre fix
+			if (gsarray[2].equals("2") || (gsarray[2].equals("3") && loc.hasAltitude()))
 				locFix=gsarray[2]+"d";
+			// On fait plus confiance a la chaine NMEA.GSA pour l'utilisation de l'altitude fournit par le locationListener
+			// Si le fix dans la chaine GSA vaut 2d, on enleve l'altitude qui a ete prise dans l'objet loc et qui peut-etre une valeur bidon (ex : par defaut = 0m) 
+			if (locFix.equals("2d"))
+				locElement.removeChild("ele", ns);
 		}
-		if(locFix == "2d")
-			locElement.removeChild("ele", ns);
 		/*
 		 * Ajout fix et DOP
 		 */
 		locFixElem.setText(locFix);
 		locElement.addContent(locFixElem);
-		if(nbSat != null && nbSat != "0") {
+		// Si nombre de satellite pas nul, on ajoute l'element <sat>n</sat>
+		if(nbSat != null && !nbSat.equals("0")) {
 			locSats.setText(nbSat);
 			locElement.addContent(locSats);
 		}
-		if(hdop != "") {
+		// Si hdop pas egal a "", on ajoute l'element <hdop>x</hdop>
+		if(!hdop.equals("")) {
 			locHdop.setText(hdop);
 			locElement.addContent(locHdop);
-			if(vdop != "")
+			// Si vdop pas egal a "" ET notre fix vaut 3d, on ajoute l'element <vdop>x</vdop> ...
+			if(!vdop.equals("") && locFix.equals("3d")) {
 				locVdop.setText(vdop);
 				locElement.addContent(locVdop);
-				if(pdop != "") {
+				// ... et l'element pdop donne par la chaine GSA ou calcule a partir de hdop et vdop
+				if(!pdop.equals("")) {
 					locPdop.setText(pdop);
-					locElement.addContent(locPdop);
+				} else {
+					double hdopv = Float.parseFloat(hdop);
+					double vdopv = Float.parseFloat(vdop);
+					locPdop.setText(String.valueOf(Math.sqrt(hdopv*hdopv+vdopv*vdopv)));
 				}
+				locElement.addContent(locPdop);
+			}
 		}
 		return locElement;
 	}
