@@ -172,16 +172,13 @@ public class TrackService extends Service implements android.location.LocationLi
 	 */
 	private String createFilename (String dir, String date) { /// date format : aaaammdd (comme les fichiers)
 		int nMax = 0;
-		String baseName = "track";
-		Log.v(TAG, "Path: " + dir);
-		//File f = new File(dir);
-		//File file[] = f.listFiles();
+		String baseName = getResources().getString(R.string.gpx_file_prefix);
 		// Listing des fichiers du repertoire $dir dans un tableau
 		File file[] = new File(dir).listFiles();
-		Log.v(TAG, "Size: "+ file.length);
+		//Log.v(TAG, "Path: " + dir);
+		//Log.v(TAG, "Size: "+ file.length);
 		
 		for (int i=0; i < file.length; i++) {
-			Log.v(TAG, "FileName:" + file[i].getName());
 			/*
 			 * Si le nom du fichier correspond a la regex suivante :
 			 * "trace-aaaammdd-n.gpx"
@@ -209,9 +206,10 @@ public class TrackService extends Service implements android.location.LocationLi
 				} catch (NumberFormatException nfe) {
 					Log.e(TAG, "Exception catched : "+nfe);
 				}
-				Log.v(TAG, "Match, index of '.gpx' : "+index2+" ; index of '-' : "+index1+" ; numS : "+numS);
+				//Log.v(TAG, "FileName:" + file[i].getName());
+				//Log.v(TAG, "Match, index of '.gpx' : "+index2+" ; index of '-' : "+index1+" ; numS : "+numS);
 			} else {
-				Log.v(TAG, "Not match.");
+				//Log.v(TAG, "Don't match.");
 			}
 		}
 		// Creation de la chaine dans un Builder avec nMax+1, nMax etant le numero de fichier le plus grand pour la date passe en parametre 
@@ -290,7 +288,7 @@ public class TrackService extends Service implements android.location.LocationLi
 				if(output != null)
 					output.close();
 			}
-			Log.v(TAG, "Files name : "+FILE_NAME);
+			//Log.v(TAG, "File name : "+FILE_NAME);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -359,8 +357,10 @@ public class TrackService extends Service implements android.location.LocationLi
 			pdop = gsarray[gsarray.length - 3];
 			hdop = gsarray[gsarray.length - 2];
 			vdop = gsarray[gsarray.length - 1].substring(0, gsarray[gsarray.length - 1].length() - 5);
-			// Si le fix dans la chaine vaut 2, on met 2d dans notre fix, si il vaut 3 ET qu'on a une altitude, on met 3d dans notre fix
-			if (gsarray[2].equals("2") || (gsarray[2].equals("3") && loc.hasAltitude()))
+			// Si le fix dans la chaine vaut 2 ET que l'altitude de l'objet loc vaut 0.0 : on met 2d dans notre fix
+			// Si le fix vaut 3, on met 3d dans notre fix
+			// Tout ca parce que l'attribut hasAltitude de la classe Location n'a pas de valeurs pour les objets location retourne par le systeme de certains telephone (teste avec un Nexus 5)
+			if ((gsarray[2].equals("2") && loc.getAltitude() == 0.0) || gsarray[2].equals("3"))
 				locFix=gsarray[2]+"d";
 			// On fait plus confiance a la chaine NMEA.GSA pour l'utilisation de l'altitude fournit par le locationListener
 			// Si le fix dans la chaine GSA vaut 2d, on enleve l'altitude qui a ete prise dans l'objet loc et qui peut-etre une valeur bidon (ex : par defaut = 0m) 
@@ -426,7 +426,7 @@ public class TrackService extends Service implements android.location.LocationLi
 	    }
 	    // Partie enregistrement dans le Fichier
 	    XMLOutputter xmlOutput = new XMLOutputter(Format.getPrettyFormat());
-	    Log.d(TAG, "addLocation : FILE_EXT = "+FILE_EXT);
+	    //Log.d(TAG, "addLocation : FILE_EXT = "+FILE_EXT);
 	    try {
 	    	if (!FILE_EXT)
 	    		xmlOutput.output(document, openFileOutput(FILE_NAME, MODE_WORLD_READABLE));
@@ -460,7 +460,7 @@ public class TrackService extends Service implements android.location.LocationLi
 		
 		//Bundle extras = intent.getExtras(); //directory = extras.getString("directory"); //fileName = extras.getString("fileName");
 		
-		Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, R.string.toast_tracking_launched, Toast.LENGTH_SHORT).show();
 		
 		/*
 		 * Partie Notification + foreground
@@ -471,9 +471,9 @@ public class TrackService extends Service implements android.location.LocationLi
 		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 		
         Notification notif = new Notification.Builder(this)
-        .setTicker("Debut de l'enregistrement de la trace gps...")
-        .setContentTitle("LocaPic - Itinerance")
-        .setContentText("Vos deplacements sont enregistres")
+        .setTicker(getResources().getString(R.string.notif_ticker))
+        .setContentTitle(getResources().getString(R.string.notif_title))
+        .setContentText(getResources().getString(R.string.notif_text))
         .setSmallIcon(R.drawable.ic_launcher)
         .setContentIntent(pendingIntent)
         .setOngoing(true).getNotification();
@@ -525,7 +525,7 @@ public class TrackService extends Service implements android.location.LocationLi
 	@Override
 	public void onDestroy()
 	{
-		Log.v(TAG, "onDestroy");
+		//Log.v(TAG, "onDestroy");
 		if (locationManager != null) {
 			Log.v(TAG, "onDestroy => lm != null");
 			try {
@@ -534,7 +534,9 @@ public class TrackService extends Service implements android.location.LocationLi
 			} catch (Exception ex) {
 				Log.i(TAG, "fail to remove location listners, ignore", ex);
 			}
-		}
+		} else
+			Log.v(TAG, "onDestroy => lm == null");
+		
 		TRACKING = false;
 		prefEditor = PreferenceManager.getDefaultSharedPreferences(this).edit();
 		prefEditor.putBoolean("TRACKING", TRACKING);
@@ -545,7 +547,7 @@ public class TrackService extends Service implements android.location.LocationLi
 	}
 	
 	private void initializeLocationManager() {
-		Log.v(TAG, "initializeLocationManager");
+		//Log.v(TAG, "initializeLocationManager");
 		if (locationManager == null) {
 			locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
 		}
