@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
@@ -19,6 +20,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
@@ -128,7 +131,7 @@ public class CameraActivity extends Activity implements SensorEventListener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
         
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE); //TODO ne fonctionne pas
 
         // On active la camera par defaut
         try 
@@ -209,7 +212,7 @@ public class CameraActivity extends Activity implements SensorEventListener
 			} 
     		catch (Exception e)
 			{
-				Log.e(TAG, "onPause impossible de liberer la camera : " + e.getMessage());
+				Log.e(TAG, "onDestroy impossible de liberer la camera : " + e.getMessage());
 			}
         }
     	
@@ -397,6 +400,54 @@ public class CameraActivity extends Activity implements SensorEventListener
         return photo;
     }
     
+	/**
+	 * Convertir des coordonnées GPS du format degres au format degres, minute, seconde (DMS)
+	 * @param loc Les coordonnées GPS a convertir
+	 * @return Les coordonnées GPS convertis
+	 */
+	private String decimalDegreesToDMS(double loc) 
+	{
+		/*  Format des coordonnées GPS dans les metadonnées
+		 * 	num1/denom1,num2/denom2,num3/denom3
+		 * 	num1/denom1 = degres
+		 *	num2/denom2 = minutes
+		 *	num3/denom3 = secondes
+		 */
+		
+		String str = Integer.toString((int) loc) + "/1,";   	// 105/1,
+		loc = (loc % 1) * 60;         						// .987654321 * 60 = 59.259258
+		str = str + Integer.toString((int) loc) + "/1,";		// 105/1,59/1,
+		loc = (loc % 1) * 60000;							// .259258 * 60000 = 15555
+		str = str + Integer.toString((int) loc) + "/1000";	// 105/1,59/1,15555/1000
+		
+		return str;
+	}
+    
+	/**
+	 * Retourne les es coordonnées actuelle GPS au format DMS
+	 * @return Les coordonnées actuelle GPS au format DMS. Le 1er element est la latitude. Le 2e la longitude
+	 */
+	private String[] getLastLoc()
+	{
+    	LocationManager locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+    	locationManager.requestSingleUpdate("gps", null, null); // TODO bug
+    	Location loc = locationManager.getLastKnownLocation("gps");
+    	double[] locDouble = {0, 0};
+    	String[] locStr = {null, null};
+    	
+    	if (loc != null) 
+    	{
+    		locDouble[0] = loc.getLatitude();
+    		locDouble[1] = loc.getLongitude();
+    	}
+    	
+    	// Convertir les coordonnées au bon format (degrees minutes seconde)
+    	locStr[0] = String.valueOf(decimalDegreesToDMS(locDouble[0]));
+    	locStr[1] = String.valueOf(decimalDegreesToDMS(locDouble[1]));
+    	
+    	return locStr;
+    }
+    
     private int getMaxZoom() 
     {
     	if (isZoomSupported)
@@ -567,7 +618,38 @@ public class CameraActivity extends Activity implements SensorEventListener
         {
             // on recupere les metaDonnees exif
             ExifInterface ei = new ExifInterface(cheminPhoto);
+            
+            /// GPS /// //TODO gps ne marche pas !
+            /*String[] loc = getLastLoc();
+            String latitude = loc[0];
+            String longitude = loc[1];
+            
+            ei.setAttribute(ExifInterface.TAG_GPS_LATITUDE, latitude);
+            ei.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, longitude);
+            
+            if (Double.valueOf(latitude) > 0)
+            {
+            	// Si la latitude est superieur a 0,  nous sommes dans l'emisphere nord
+            	ei.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "N");
+            }
+            else
+            {
+            	// sinon mettre le referentiel de la latitude a "sud"
+            	ei.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "S");
+            }
+            
+            if (Double.valueOf(longitude) > 0)
+            {
+            	// Si la longitude est superieur a 0, nous sommes a l'est du méridien de greenwich
+            	ei.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "E");
+            }
+            else
+            {
+            	// sinon nous sommes a l'ouest du méridien de greenwich
+            	ei.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "W");
+            }*/
 
+            /// ORIENTATION et AZIMUT ///
             // valeur du tag exif a ecrire
             String tagPerso = "";
             tagPerso += "Orientation:" + String.valueOf(orientation) + "\n";
