@@ -16,7 +16,7 @@
     <string name="takePicture">Take a picture</string>
     <string name="settings">Settings</string>
     <string name="quit">Quit</string>
-    <string name="format_date">MMddyyyy_HHmmss</string>
+    <string name="format_date">MM-dd-yyyy_HH-mm-ss</string>
     <string name="flash">Flash :</string>
     <string name="flashAuto">Auto Flash</string>
     <string name="retardateur">Timer</string>

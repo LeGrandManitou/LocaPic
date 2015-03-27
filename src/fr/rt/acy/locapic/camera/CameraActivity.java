@@ -45,8 +45,8 @@ public class CameraActivity extends Activity implements SensorEventListener
 	public final static String TAG_USER_COMMENT = "UserComment";
 	// tag pour startActivityForResult
 	private final static int REQUEST_CODE_POPUP_FAST_SETTINGS = 100;
-	// pause durant laquelle le preview se fige entre chaque photo (en ms)
-	public final static int pauseEntrePhoto = 1000 ;
+	// pause durant laquelle le preview se fige pour afficher un apercu de la photo prise entre chaque photo (en ms)
+	public final static int pauseEntrePhoto = 0;
 
 	private String cheminPhoto = null;      // Chemin de la dernier photo enregistree
 	private Camera camera;                  // Camera utillisee
@@ -343,10 +343,10 @@ public class CameraActivity extends Activity implements SensorEventListener
 			// Orientation ecran
 			Orientation orientationMesured;
 			float y = event.values[1];
+			float x = event.values[0];
 			y = (y / SensorManager.GRAVITY_EARTH);
-			if(y < 0.5)
+			if(y < 0.5 && x != 0)
 			{
-    			float x = event.values[0];
     			if (x < 0)
     				orientationMesured = Orientation.PAYSAGE_180;
     			else
@@ -389,7 +389,7 @@ public class CameraActivity extends Activity implements SensorEventListener
     {
         // On creer le fichier
         String dateTime =  new SimpleDateFormat(getString(R.string.format_date), Locale.FRENCH).format(new Date());
-        String nomPhoto = "IMG_" + dateTime;
+        String nomPhoto = "Locapic_" + dateTime;
 
         // On recupere le repertoire photo du telephone
         File rep = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
@@ -414,9 +414,9 @@ public class CameraActivity extends Activity implements SensorEventListener
 		 *	num3/denom3 = secondes
 		 */
 		
-		String str = Integer.toString((int) loc) + "/1,";   	// 105/1,
+		String str = Integer.toString((int) loc) + "/1,";   // 105/1,
 		loc = (loc % 1) * 60;         						// .987654321 * 60 = 59.259258
-		str = str + Integer.toString((int) loc) + "/1,";		// 105/1,59/1,
+		str = str + Integer.toString((int) loc) + "/1,";	// 105/1,59/1,
 		loc = (loc % 1) * 60000;							// .259258 * 60000 = 15555
 		str = str + Integer.toString((int) loc) + "/1000";	// 105/1,59/1,15555/1000
 		
@@ -561,6 +561,7 @@ public class CameraActivity extends Activity implements SensorEventListener
         int rotation = orientation.getRotation();
         prendrePhotoButton.setRotation(rotation);
         fastSettingsButton.setRotation(rotation);
+        retourButton.setRotation(rotation);
     }
     
     private void setZoom(int zoom)
