@@ -8,9 +8,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import fr.rt.acy.locapic.gps.LocStatsActivity;
 import fr.rt.acy.locapic.gps.TrackService;
+import fr.rt.acy.locapic.gps.TrackStatsActivity;
 import fr.rt.acy.locapic.camera.CameraActivity;
 import android.app.Activity;
+import android.app.TabActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,16 +24,26 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ActionMenuView;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TabHost;
+import android.widget.TabHost.TabSpec;
 import android.widget.Toast;
 
-public class MainActivity extends Activity 
+public class MainActivity extends TabActivity 
 {
-	private final String DEBUG_AUTO_START_INITENT = ""; // "camera" pour lancer automatiquement la camera
+	public final static int TRACKING_BUTTON_ACTIVITY_TEXT = 0;
+	public final static int TRACKING_BUTTON_ACTIVITY_ICON = 1;
+	public final static int TRACKING_BUTTON_ACTIONBAR_ICON = 2;
+	
+	private final static int TRACKING_BUTTON_ACTIVITY_TYPE = TRACKING_BUTTON_ACTIVITY_ICON;
+	private final static int TRACKING_BUTTON_TYPE = TRACKING_BUTTON_ACTIONBAR_ICON;
+	private final String DEBUG_AUTO_START_INTENT = ""; // "camera" pour lancer automatiquement la camera
 	private Intent prefIntent;
 	private final String TAG = "HOME";
 	private SharedPreferences pref;
@@ -38,11 +51,11 @@ public class MainActivity extends Activity
 	private boolean notifPref = false;
 	private Button button_tracking = null;
 	private ImageButton image_button_tracking = null;
+	private MenuItem menu_button_tracking;
 	private boolean tracking = false;
 	private LocationManager lm = null;
 	private final String GPX_BASE = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n<gpx version=\"1.1\">\n\t<metadata>\n\t\t<name>Android GPS receiver track</name>\n\t\t<desc>GPS track logged on an Android device with an application from a project by Samuel Beaurepaire &amp; Virgile Beguin for IUT of Annecy (Fr), RT departement.</desc>\n\t\t<time></time>\n\t\t<author>\n\t\t\t<name>Samuel Beaurepaire</name>\n\t\t\t<email id=\"sjbeaurepaire\" domain=\"orange.fr\" />\n\t\t</author>\n\t\t<keywords></keywords>\n\t</metadata>\n\n\t<trk>\n\t</trk>\n</gpx>";
 	private final String FILES_DIR = Environment.getExternalStorageDirectory().getPath() + "/TracesGPS/";
-	//TODO NETWORK provider et interface pour demo + logo + intents
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) 
@@ -50,13 +63,36 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
-        if (DEBUG_AUTO_START_INITENT.equals("camera")) 
+        if (DEBUG_AUTO_START_INTENT.equals("camera")) 
         	startCamera(null);
             
-        //button_tracking = (Button) findViewById(R.id.main_button_tracking);
-        //button_tracking.setOnClickListener(trackingButtonListener);
-        image_button_tracking = (ImageButton) findViewById(R.id.main_button_tracking);
-        image_button_tracking.setOnClickListener(trackingButtonListener);
+        /* Version texte du boutton itineraire
+         * button_tracking = (Button) findViewById(R.id.main_button_tracking);
+         * button_tracking.setOnClickListener(trackingButtonListener);*/
+        /* Version avec un icone du boutton itineraire
+         * image_button_tracking = (ImageButton) findViewById(R.id.main_button_tracking);
+         * image_button_tracking.setOnClickListener(trackingButtonListener); */
+        // On utilise la version actionBar
+        
+        /** Gestion des onglets TODO fragments */
+		// Creation d'un TabHost qui accueillera tous nos onglets
+		TabHost tabHost = (TabHost)findViewById(android.R.id.tabhost);
+		
+		// Creation d'onglets
+		TabSpec tab1 = tabHost.newTabSpec("First Tab");
+		TabSpec tab2 = tabHost.newTabSpec("Second Tab");
+		TabSpec tab3 = tabHost.newTabSpec("Third tab");
+		
+		// Parametrage du nom et des activites pour les differents onglets
+		tab1.setIndicator(getResources().getString(R.string.tab_locstats)).setContent(new Intent(this, fr.rt.acy.locapic.gps.LocStatsActivity.class));
+		tab2.setIndicator(getResources().getString(R.string.tab_trackstats)).setContent(new Intent(this, fr.rt.acy.locapic.gps.TrackStatsActivity.class));
+		tab3.setIndicator(getResources().getString(R.string.tab_map));//.setContent(new Intent(this,fr.rt.acy.locapic.gps.TrackStatsActivity.class));
+		
+		// Ajout des onglets au TabHost
+		tabHost.addTab(tab1);
+		tabHost.addTab(tab2);
+		//tabHost.addTab(tab3);
+		
     }
     
     @Override
@@ -71,66 +107,93 @@ public class MainActivity extends Activity
 		useNetworkPref = pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false);
 		
 		if(tracking) {
-			//button_tracking.setText(R.string.button_tracking_on);
-			image_button_tracking.setImageResource(R.drawable.ic_action_location_off);
+			switch(TRACKING_BUTTON_TYPE) {
+				case TRACKING_BUTTON_ACTIVITY_TEXT:
+					button_tracking.setText(R.string.button_tracking_on);
+					break;
+				case TRACKING_BUTTON_ACTIVITY_ICON:
+					image_button_tracking.setImageResource(R.drawable.ic_action_location_off);
+					break;
+				case TRACKING_BUTTON_ACTIONBAR_ICON:
+					menu_button_tracking.setIcon(R.drawable.ic_action_location_off_white);
+					menu_button_tracking.setTitle(R.string.button_tracking_on);
+					break;
+			}
 		}
 	}
     
     /**
-	 * Listener du bouton "Enregistrer itineraire" avec Service
-	 * (ou "Arreter l'itineraire en cours") 
-	 */
-	private OnClickListener trackingButtonListener = new OnClickListener() {
+     * Lance ou arrete le service qui enregistre l'itineraire
+     * Change une preference TRACKING (boolean pour savoir si on enregistre ou pas)
+     * Change aussi le texte ou l'image du boutton clique en fonction de l'entier passe en parametre :
+     * @param button_type - 0 pour un boutton texte dans l'activite (fond blanc) ; 1 pour une image boutton dans l'activite (fond blanc) ; 2 pour une image boutton dans l'actionBar (fond noir)
+     */
+    private void switchTracking(int button_type) {
+    	Intent serviceIntent = new Intent(MainActivity.this, fr.rt.acy.locapic.gps.TrackService.class);
 		/**
-		 * Lors du clique sur le bouton
+		 * Si pas deja en train d'enregistrer un itineraire
 		 */
-		@Override
-		public void onClick(View v) {
-			Intent serviceIntent = new Intent(MainActivity.this, fr.rt.acy.locapic.gps.TrackService.class);
-			/**
-			 * Si pas deja en train d'enregistrer un itineraire
-			 */
-			if(!tracking) {
-				/**
-				 * Si GPS on
-				 */
-				if(lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-					startService(serviceIntent);
-					// Gestion de la preference (pour savoir si record en cours ou pas)
-					tracking = true; //PreferenceManager.getDefaultSharedPreferences(getBaseContext())
-					SharedPreferences.Editor prefEditor = pref.edit();
-					prefEditor.putBoolean("TRACKING", tracking);
-					prefEditor.commit();
-					// Changement du bouton
-					//button_tracking.setText(R.string.button_tracking_on);
-					image_button_tracking.setImageResource(R.drawable.ic_action_location_off);
-				} else {
-					/**
-					 * Si GPS pas actif
-					 */
-					Toast.makeText(MainActivity.this, R.string.toast_gps_off, Toast.LENGTH_SHORT).show();
-				}
-			} else {
-				/**
-				 * Si deja en train d'enregistrer un itineraire
-				 * + Arret du service
-				 * + Changement du bouton
-				 * + Edition de la preference
-				 */
-				// Arret du service
-				serviceIntent.putExtra("STOP", true);
-				//serviceIntent.setAction("fr.rt.acy.locapic.STOP");
-				//sendBroadcast(serviceIntent);
-				stopService(serviceIntent);
+		if(!tracking) {
+			/** Si GPS on */
+			if(lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+				startService(serviceIntent);
 				// Gestion de la preference (pour savoir si record en cours ou pas)
-				tracking = false;
+				tracking = true; //PreferenceManager.getDefaultSharedPreferences(getBaseContext())
 				SharedPreferences.Editor prefEditor = pref.edit();
 				prefEditor.putBoolean("TRACKING", tracking);
 				prefEditor.commit();
 				// Changement du bouton
-				//button_tracking.setText(R.string.button_tracking_off);
-				image_button_tracking.setImageResource(R.drawable.ic_action_location_found);
+				switch(button_type) {
+					case TRACKING_BUTTON_ACTIVITY_TEXT:
+						button_tracking.setText(R.string.button_tracking_on);
+						break;
+					case TRACKING_BUTTON_ACTIVITY_ICON:
+						image_button_tracking.setImageResource(R.drawable.ic_action_location_off);
+						break;
+					case TRACKING_BUTTON_ACTIONBAR_ICON:
+						menu_button_tracking.setIcon(R.drawable.ic_action_location_off_white);
+						menu_button_tracking.setTitle(R.string.button_tracking_on);
+						break;
+				}
+			} else {
+				/**
+				 * Si GPS pas actif
+				 */
+				Toast.makeText(MainActivity.this, R.string.toast_gps_off, Toast.LENGTH_SHORT).show();
 			}
+		} else {
+			/** Si deja en train d'enregistrer un itineraire : Arret du service + Changement du bouton + Edition de la preference */
+			// Arret du service
+			stopService(serviceIntent);
+			// Gestion de la preference (pour savoir si record en cours ou pas)
+			tracking = false;
+			SharedPreferences.Editor prefEditor = pref.edit();
+			prefEditor.putBoolean("TRACKING", tracking);
+			prefEditor.commit();
+			// Changement du bouton
+			switch(button_type) {
+				case TRACKING_BUTTON_ACTIVITY_TEXT:
+					button_tracking.setText(R.string.button_tracking_off);
+					break;
+				case TRACKING_BUTTON_ACTIVITY_ICON:
+					image_button_tracking.setImageResource(R.drawable.ic_action_location_found);
+					break;
+				case TRACKING_BUTTON_ACTIONBAR_ICON:
+					menu_button_tracking.setIcon(R.drawable.ic_action_location_found_white);
+					menu_button_tracking.setTitle(R.string.button_tracking_off);
+					break;
+			}
+		}
+    }
+    /**
+	 * Listener du bouton Itineraire (Tracking button)
+	 * lance switchTracking(int)
+	 */
+	private OnClickListener trackingButtonListener = new OnClickListener() {
+		/** Lors du clique sur le bouton */
+		@Override
+		public void onClick(View v) {
+			switchTracking(TRACKING_BUTTON_ACTIVITY_TYPE);
 		}
 	};
     
@@ -147,9 +210,11 @@ public class MainActivity extends Activity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) 
     {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
+		// Inflate the menu; this adds items to the action bar if it is present.
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.main, menu);
+		menu_button_tracking = menu.findItem(R.id.action_track);
+		return true;
     }
 
     @Override
@@ -163,7 +228,13 @@ public class MainActivity extends Activity
 			case R.id.action_settings:
 				prefIntent = new Intent(this, PreferencesActivity.class);
 				startActivity(prefIntent);
-				return true;
+				break;
+			case R.id.action_camera:
+		    	startActivity(new Intent(this, CameraActivity.class));
+				break;
+			case R.id.action_track:
+				switchTracking(TRACKING_BUTTON_ACTIONBAR_ICON);
+				break;
         }
         return super.onOptionsItemSelected(item);
     }

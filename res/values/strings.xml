@@ -9,8 +9,10 @@
 	<string name="itineraire">Itinéraire</string>
 	<string name="desc_camera">Logo caméra, utilisé pour lancer l\'appareil photo</string>
 	<string name="desc_gps">Logo point GPS, utilisé pour lancer l\'enregistrement d\'itinéraire</string>
-	    <!-- string name="desc_camera_eng">Camera logo, used to launch camera</string>
-		<string name="desc_gps_eng">GPS point logo, used to launch GPS tracking</string-->
+	<string name="tab_locstats">Position</string>
+	<string name="tab_trackstats">Itinéraire</string>
+	<string name="tab_map">Carte</string>
+	    
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Camera ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<string name="prendrePhoto">Take picture</string>
     <string name="takePicture">Take a picture</string>
@@ -52,6 +54,7 @@
 	<string name="button_tracking_on">Arrêter l\'enregistrement</string>
 	<string name="toast_gps_off">Vous devez activer le GPS pour enregistrer un itineraire.</string>
 	<string name="toast_tracking_launched">Début de l\'enregistrement de la trace gps...</string>
+	<string name="toast_tracking_stopped">Fin de l\'enregistrement de la trace gps...</string>
 	<!--string name="toast_tracking_launched">Enregistrement lancé vers le fichier : </string-->
 	<string name="notif_ticker">Début de l\'enregistrement de la trace gps...</string>
 	<string name="notif_title">LocaPic vous suit</string>

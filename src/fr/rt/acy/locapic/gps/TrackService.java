@@ -542,6 +542,8 @@ public class TrackService extends Service implements android.location.LocationLi
 		prefEditor.putBoolean("TRACKING", TRACKING);
 		prefEditor.commit();
 		
+		Toast.makeText(this, R.string.toast_tracking_stopped, Toast.LENGTH_SHORT).show();
+		
 		super.onDestroy();
 		stopSelf();
 	}

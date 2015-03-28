@@ -2,6 +2,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="fr.rt.acy.locapic.MainActivity" >
 
+    <item 
+        android:id="@+id/action_camera"
+        android:title="@string/camera"
+        android:showAsAction="always"
+        android:icon="@drawable/ic_action_camera" />
+    
+    <item 
+        android:id="@+id/action_track"
+        android:title="@string/button_tracking_off"
+        android:showAsAction="always"
+        android:icon="@drawable/ic_action_location_found_white" />
+    
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"

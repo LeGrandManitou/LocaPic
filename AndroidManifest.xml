@@ -45,7 +45,25 @@
             android:name=".PreferencesActivity"
             android:label="@string/app_name" >
         </activity>
-        
+		
+		<activity
+		    android:name="fr.rt.acy.locapic.gps.LocStatsActivity"
+		    android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="fr.rt.acy.locapic.gps.LocStatsActivity" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+		</activity>
+		
+		<activity
+		    android:name="fr.rt.acy.locapic.gps.TrackStatsActivity"
+		    android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="fr.rt.acy.locapic.gps.LocStatsActivity" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+		</activity>
+
         <service android:name="fr.rt.acy.locapic.gps.TrackService"
   			android:label="Tracking service"
   			android:icon="@drawable/ic_launcher"
