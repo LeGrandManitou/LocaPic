@@ -1,7 +1,251 @@
 <?xml version="1.0" encoding="utf-8"?>
-<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
     
-
-</GridLayout>
+    <LinearLayout
+    	android:layout_height="wrap_content"
+    	android:layout_width="match_parent" 
+    	android:orientation="horizontal"
+    	android:layout_marginLeft="@dimen/activity_horizontal_margin"
+    	android:layout_marginRight="@dimen/activity_horizontal_margin"
+    	android:layout_marginTop="@dimen/activity_vertical_margin"
+    	android:layout_marginBottom="@dimen/activity_vertical_margin" >
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content"
+    		android:layout_weight="1" 
+    		android:orientation="vertical" >
+    		
+    		<TextView
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="Lattitude"
+    		    android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/loc_lat"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text=""
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content" 
+    		android:orientation="vertical"
+    		android:layout_weight="1" >
+    		
+    		<TextView
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="Longitude"
+    		    android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/loc_lon"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text=""
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+    </LinearLayout>
+    
+    <LinearLayout
+    	android:layout_height="wrap_content"
+    	android:layout_width="match_parent" 
+    	android:orientation="horizontal"
+    	android:layout_marginLeft="@dimen/activity_horizontal_margin"
+    	android:layout_marginRight="@dimen/activity_horizontal_margin"
+    	android:layout_marginTop="0sp"
+    	android:layout_marginBottom="@dimen/activity_vertical_margin"
+    	android:baselineAligned="true" >
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content"
+    		android:layout_weight="1" 
+    		android:orientation="vertical" >
+    		
+    		<TextView
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="Altitude"
+    		    android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/loc_alt"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text=""
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content" 
+    		android:orientation="vertical"
+    		android:layout_weight="1" >
+    		
+    		<TextView
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="Vitesse"
+				android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/loc_speed"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text=""
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+	</LinearLayout>
+    
+    <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content" 
+    		android:orientation="vertical"
+    		android:layout_gravity="center"
+    		android:layout_marginLeft="@dimen/activity_horizontal_margin"
+    		android:layout_marginRight="@dimen/activity_horizontal_margin"
+    		android:layout_marginTop="0sp"
+    		android:layout_marginBottom="@dimen/activity_vertical_margin" >
+        
+    		<TextView
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="Date et heure"
+				android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/loc_date"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text=""
+    		    android:textAppearance="@style/primaryText" />
+    		<TextView
+    		    android:id="@+id/loc_time"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text=""
+    		    android:textAppearance="@style/primaryText" />
+    		
+    </LinearLayout>
+    
+	<View
+	    android:layout_width="match_parent"
+		android:layout_height="1dp"	
+		android:background="#999" />
+	
+	<LinearLayout
+    	android:layout_height="wrap_content"
+    	android:layout_width="match_parent" 
+    	android:orientation="horizontal"
+    	android:layout_marginLeft="@dimen/activity_horizontal_margin"
+    	android:layout_marginRight="@dimen/activity_horizontal_margin"
+    	android:layout_marginTop="@dimen/activity_vertical_margin"
+    	android:layout_marginBottom="@dimen/activity_vertical_margin" >
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content"
+    		android:layout_weight="1" 
+    		android:orientation="vertical" >
+    		
+    		<TextView
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="HDOP"
+    		    android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/loc_hdop"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text=""
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+        <LinearLayout 
+            android:layout_height="wrap_content"
+    		android:layout_width="wrap_content"
+    		android:layout_weight="1" 
+    		android:orientation="vertical"  >
+    		
+    		<TextView
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="PDOP"
+    		    android:textAppearance="@style/secondaryText" />
+    		
+    		<TextView
+    		    android:id="@+id/loc_pdop"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text=""
+    		    android:textAppearance="@style/primaryText"/>
+    		
+		</LinearLayout>
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content" 
+    		android:orientation="vertical"
+    		android:layout_weight="1" >
+    		
+    		<TextView
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="VDOP"
+				android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/loc_vdop"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text=""
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+    </LinearLayout>
+	
+	<LinearLayout 
+        android:id="@+id/barRefreshButton"
+        android:gravity="center"
+        android:layout_width="match_parent"
+   		android:layout_height="wrap_content"
+   		android:orientation="horizontal"
+   		style="?android:attr/buttonBarStyle" >
+   		
+    	<Button 
+    		android:id="@+id/loc_refresh"
+	       	android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:text="Actualiser la position"
+	        style="?android:attr/buttonBarButtonStyle" />
+	        
+	</LinearLayout>
+	
+</LinearLayout>

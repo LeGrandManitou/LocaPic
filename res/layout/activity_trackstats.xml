@@ -1,7 +1,241 @@
 <?xml version="1.0" encoding="utf-8"?>
-<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
     
-
-</GridLayout>
+    <LinearLayout
+    	android:layout_height="wrap_content"
+    	android:layout_width="match_parent" 
+    	android:orientation="horizontal"
+    	android:layout_marginLeft="@dimen/activity_horizontal_margin"
+    	android:layout_marginRight="@dimen/activity_horizontal_margin"
+    	android:layout_marginTop="@dimen/activity_vertical_margin"
+    	android:layout_marginBottom="@dimen/activity_vertical_margin" >
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content"
+    		android:layout_weight="1" 
+    		android:orientation="vertical" >
+    		
+    		<TextView
+    		    android:id="@+id/tv1"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="Lattitude"
+    		    android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/tv1_1"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="10.54433"
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content" 
+    		android:orientation="vertical"
+    		android:layout_weight="1" >
+    		
+    		<TextView
+    		    android:id="@+id/tv2"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="Longitude"
+    		    android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/tv2_1"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="-2.45723"
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+    </LinearLayout>
+    
+    <LinearLayout
+    	android:layout_height="wrap_content"
+    	android:layout_width="match_parent" 
+    	android:orientation="horizontal"
+    	android:layout_marginLeft="@dimen/activity_horizontal_margin"
+    	android:layout_marginRight="@dimen/activity_horizontal_margin"
+    	android:layout_marginTop="0sp"
+    	android:layout_marginBottom="@dimen/activity_vertical_margin" >
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content"
+    		android:layout_weight="1" 
+    		android:orientation="vertical" >
+    		
+    		<TextView
+    		    android:id="@+id/tv3"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="Altitude"
+    		    android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/tv3_1"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="2048m"
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content" 
+    		android:orientation="vertical"
+    		android:layout_weight="1" >
+    		
+    		<TextView
+    		    android:id="@+id/tv4"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="Vitesse"
+				android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/tv4_1"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="42 km/h"
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+	</LinearLayout>
+    
+    <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content" 
+    		android:orientation="vertical"
+    		android:layout_gravity="center"
+    		android:layout_marginLeft="@dimen/activity_horizontal_margin"
+    		android:layout_marginRight="@dimen/activity_horizontal_margin"
+    		android:layout_marginTop="0sp"
+    		android:layout_marginBottom="@dimen/activity_vertical_margin" >
+        
+    		<TextView
+    		    android:id="@+id/tv5"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="Date et heure"
+				android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/tv5_1"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="01/06/2018"
+    		    android:textAppearance="@style/primaryText" />
+    		<TextView
+    		    android:id="@+id/tv5_2"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="9:59"
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+    
+	<View
+	    android:layout_width="match_parent"
+		android:layout_height="1dp"	
+		android:background="#999" />
+	
+	<LinearLayout
+    	android:layout_height="wrap_content"
+    	android:layout_width="match_parent" 
+    	android:orientation="horizontal"
+    	android:layout_marginLeft="@dimen/activity_horizontal_margin"
+    	android:layout_marginRight="@dimen/activity_horizontal_margin"
+    	android:layout_marginTop="@dimen/activity_vertical_margin"
+    	android:layout_marginBottom="@dimen/activity_vertical_margin" >
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content"
+    		android:layout_weight="1" 
+    		android:orientation="vertical" >
+    		
+    		<TextView
+    		    android:id="@+id/tv7"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="HDOP"
+    		    android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/tv7_1"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="0.8"
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+        <LinearLayout 
+            android:layout_height="wrap_content"
+    		android:layout_width="wrap_content"
+    		android:layout_weight="1" 
+    		android:orientation="vertical"  >
+    		
+    		<TextView
+    		    android:id="@+id/tv6"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="PDOP"
+    		    android:textAppearance="@style/secondaryText" />
+    		
+    		<TextView
+    		    android:id="@+id/tv6_1"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="1.0"
+    		    android:textAppearance="@style/primaryText"/>
+    		
+		</LinearLayout>
+        
+        <LinearLayout 
+			android:layout_height="wrap_content"
+    		android:layout_width="wrap_content" 
+    		android:orientation="vertical"
+    		android:layout_weight="1" >
+    		
+    		<TextView
+    		    android:id="@+id/tv8"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="VDOP"
+				android:textAppearance="@style/secondaryText" />
+    		<TextView
+    		    android:id="@+id/tv8_1"
+    		    android:layout_height="wrap_content"
+    		    android:layout_width="wrap_content"
+    		    android:layout_gravity="center"
+    		    android:text="0.7"
+    		    android:textAppearance="@style/primaryText" />
+    		
+        </LinearLayout>
+        
+    </LinearLayout>
+	
+</LinearLayout>

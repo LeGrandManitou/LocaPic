@@ -11,7 +11,7 @@
                 android:inputType="number" 
                 android:summary="Minimum time between each point (in seconds)"
                 android:dialogTitle="Minimum time between each point (in seconds)" />
-
+        
 		<EditTextPreference
 		    	android:id="@+id/settings_locDist"
                 android:key="LOCATION_DISTANCE"

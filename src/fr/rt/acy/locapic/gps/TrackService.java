@@ -50,13 +50,13 @@ public class TrackService extends Service implements android.location.LocationLi
 	private static int test = 0;
 	private String GSA = null;
 	private SharedPreferences pref;
+	private SharedPreferences.Editor prefEditor;
 	private Namespace ns = Namespace.getNamespace("http://www.topografix.com/GPX/1/1");
 	private static boolean TRACKING = false;
 	private static String FILE_NAME;
 	private static boolean FILE_EXT = false;  
 	private final String EXT_FILES_DIR = Environment.getExternalStorageDirectory().getPath() + "/MyTracks/";
-	private SharedPreferences.Editor prefEditor;
-	
+	public static final String INTENT_ACTION = "MY_ACTION";
 	/**
 	 * Methode pour creer le document JDOM de base pour le fichier GPX
 	 * Prend en parametre des valeurs pour les metadonnees GPX (contenues dans la balise <metadata>)
@@ -457,11 +457,8 @@ public class TrackService extends Service implements android.location.LocationLi
 		 * Partie Gestion de base du Service
 		 */
 		super.onStartCommand(intent, flags, startId);
-		
 		//Bundle extras = intent.getExtras(); //directory = extras.getString("directory"); //fileName = extras.getString("fileName");
-		
 		Toast.makeText(this, R.string.toast_tracking_launched, Toast.LENGTH_SHORT).show();
-		
 		/*
 		 * Partie Notification + foreground
 		 */
@@ -494,9 +491,9 @@ public class TrackService extends Service implements android.location.LocationLi
 		/**
 		 * Gestion du Service
 		 */
-		HandlerThread thread = new HandlerThread("trackServiceHandlerThread", Process.THREAD_PRIORITY_DEFAULT);
+		/*HandlerThread thread = new HandlerThread("trackServiceHandlerThread", Process.THREAD_PRIORITY_DEFAULT);
 		thread.start();
-		
+		*/
 		/**
 		 * Gestion de l'itineraire
 		 */
@@ -579,7 +576,40 @@ public class TrackService extends Service implements android.location.LocationLi
 			addLocation(createLocationElement(location));
 		} else {
 			//Log.v(TAG, "Loc == null");
-		}		
+		}
+		
+		/** Intent pour l'actualisation graphique */
+		long locPosixTime = (long) location.getTime();
+		Date locDate = new Date(locPosixTime);
+		SimpleDateFormat euDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.FRENCH);
+		SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.FRENCH);
+		euDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+1"));
+		timeFormat.setTimeZone(TimeZone.getTimeZone("GMT+1"));
+		String euDate = euDateFormat.format(locDate);
+		String time = timeFormat.format(locDate);
+		
+		String pdop = "";
+		String hdop = "";
+		String vdop = "";
+		if(GSA != null) {
+			String[] gsarray = GSA.split(",");
+			pdop = gsarray[gsarray.length - 3];
+			hdop = gsarray[gsarray.length - 2];
+			vdop = gsarray[gsarray.length - 1].substring(0, gsarray[gsarray.length - 1].length() - 5);
+		}
+		
+		Intent intent = new Intent();
+		intent.setAction(INTENT_ACTION);
+		intent.putExtra("LOC_LAT", String.valueOf(location.getLatitude()))
+			.putExtra("LOC_LON", String.valueOf(location.getLongitude()))
+			.putExtra("LOC_ELE", String.valueOf(location.getAltitude()))
+			.putExtra("LOC_SPEED", String.valueOf(location.getSpeed()))
+			.putExtra("LOC_DATE", euDate)
+			.putExtra("LOC_TIME", time)
+			.putExtra("LOC_HDOP", hdop)
+			.putExtra("LOC_VDOP", vdop)
+			.putExtra("LOC_PDOP", pdop);
+	    sendBroadcast(intent);
 	}
 
 	@Override

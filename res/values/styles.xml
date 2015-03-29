@@ -17,4 +17,14 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
 
+    <style name="primaryText">
+        <item name="android:textSize">20sp</item>
+		<item name="android:textColor">?android:textColorPrimary</item>
+    </style>
+    
+    <style name="secondaryText">
+        <item name="android:textSize">13sp</item>
+		<item name="android:textColor">?android:textColorSecondary</item>
+    </style>
+    
 </resources>
