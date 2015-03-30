@@ -21,6 +21,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.ExifInterface;
 import android.os.Bundle;
@@ -430,7 +431,16 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private String[] getLastLoc()
 	{
     	LocationManager locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-    	locationManager.requestSingleUpdate("gps", null, null); // TODO bug
+    	locationManager.requestSingleUpdate("gps", new LocationListener() {
+			@Override
+			public void onStatusChanged(String provider, int status, Bundle extras) {}
+			@Override
+			public void onProviderEnabled(String provider) {}
+			@Override
+			public void onProviderDisabled(String provider) {}
+			@Override
+			public void onLocationChanged(Location location) {}
+		}, null); // TODO bug
     	Location loc = locationManager.getLastKnownLocation("gps");
     	double[] locDouble = {0, 0};
     	String[] locStr = {null, null};
@@ -621,14 +631,14 @@ public class CameraActivity extends Activity implements SensorEventListener
             ExifInterface ei = new ExifInterface(cheminPhoto);
             
             /// GPS /// //TODO gps ne marche pas !
-            /*String[] loc = getLastLoc();
+            String[] loc = getLastLoc();
             String latitude = loc[0];
             String longitude = loc[1];
             
             ei.setAttribute(ExifInterface.TAG_GPS_LATITUDE, latitude);
             ei.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, longitude);
             
-            if (Double.valueOf(latitude) > 0)
+            if (Integer.valueOf(latitude.substring(0, latitude.indexOf("/"))) > 0)
             {
             	// Si la latitude est superieur a 0,  nous sommes dans l'emisphere nord
             	ei.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "N");
@@ -639,7 +649,7 @@ public class CameraActivity extends Activity implements SensorEventListener
             	ei.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "S");
             }
             
-            if (Double.valueOf(longitude) > 0)
+            if (Integer.valueOf(longitude.substring(0, longitude.indexOf("/"))) > 0)
             {
             	// Si la longitude est superieur a 0, nous sommes a l'est du méridien de greenwich
             	ei.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "E");
@@ -648,7 +658,7 @@ public class CameraActivity extends Activity implements SensorEventListener
             {
             	// sinon nous sommes a l'ouest du méridien de greenwich
             	ei.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "W");
-            }*/
+            }
 
             /// ORIENTATION et AZIMUT ///
             // valeur du tag exif a ecrire
@@ -691,8 +701,10 @@ public class CameraActivity extends Activity implements SensorEventListener
             try
             {
                 ei = new ExifInterface(cheminPhoto);
-
                 Log.v(TAG, TAG_USER_COMMENT + " -> " + ei.getAttribute(TAG_USER_COMMENT));
+
+                Log.v(TAG, ExifInterface.TAG_GPS_LATITUDE + " -> " + ei.getAttribute(ExifInterface.TAG_GPS_LATITUDE));
+                Log.v(TAG, ExifInterface.TAG_GPS_LONGITUDE + " -> " + ei.getAttribute(ExifInterface.TAG_GPS_LONGITUDE));
             }
             catch (IOException e)
             {

@@ -98,11 +98,12 @@ public class LocStatsActivity extends Activity implements LocationListener, Nmea
 				if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 					// Demande d'update unique de la position et d'ecoute des chaines NMEA
 					lm.requestSingleUpdate(LocationManager.GPS_PROVIDER, LocStatsActivity.this, null);
-					if(pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false))
-						lm.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, LocStatsActivity.this, null);
 					lm.addNmeaListener(LocStatsActivity.this);
-					Toast.makeText(getApplicationContext(), "En attente des donnees de localisation...", Toast.LENGTH_SHORT).show();
 				}
+				if(pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false))
+					lm.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, LocStatsActivity.this, null);
+				if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false))
+					Toast.makeText(getApplicationContext(), "En attente des donnees de localisation...", Toast.LENGTH_SHORT).show();
 			}
 		});
 	}
