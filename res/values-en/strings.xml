@@ -8,7 +8,18 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Camera ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	    
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    
+    <string name="settings_gps_title">GPS Settings</string>
+	<string name="settings_gps_interval_title">Minimum time</string>
+	<string name="settings_gps_interval_summary">Minimum time between each point (seconds)</string>
+	<string name="settings_gps_interval_dialog">Minimum time between each point (seconds)</string>
+	<string name="settings_gps_distance_title">Minimum distance</string>
+	<string name="settings_gps_distance_summary">Minimum distance between each point (meters)</string>
+	<string name="settings_gps_distance_dialog">Minimum distance between each point (meters)</string>
+	<string name="settings_gps_network_title">Use network location provider</string>
+	<string name="settings_gps_network_summary">Use network location provider if no GPS location is found, less accurate</string>
+	<string name="settings_gps_notif_title">Notifications</string>
+	<string name="settings_gps_notif_summary">Show notifications</string>
+	
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ GPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<string name="gpx_file_prefix">track</string>
 	
