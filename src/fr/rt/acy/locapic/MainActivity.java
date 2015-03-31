@@ -244,7 +244,6 @@ public class MainActivity extends TabActivity
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main, menu);
 		menu_button_tracking = menu.findItem(R.id.action_track);
-		
 		// Gestion de la preference tracking pour savoir quel icone afficher pour le bouton de marche/arret de l'itineraire
         pref = PreferenceManager.getDefaultSharedPreferences(this);
      	tracking = pref.getBoolean("TRACKING", false);
