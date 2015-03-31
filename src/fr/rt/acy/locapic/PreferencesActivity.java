@@ -3,6 +3,7 @@ package fr.rt.acy.locapic;
 import android.app.Activity;
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
+import android.view.Menu;
 
 public class PreferencesActivity extends Activity {
 	
@@ -19,11 +20,17 @@ public class PreferencesActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        
         // Display the fragment as the main content.
         getFragmentManager().beginTransaction()
                 .replace(android.R.id.content, new SettingsFragment())
                 .commit();
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	getActionBar().setDisplayHomeAsUpEnabled(true);
+    	return super.onCreateOptionsMenu(menu);
     }
     
     /**
