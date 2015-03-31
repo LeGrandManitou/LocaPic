@@ -37,18 +37,35 @@
     <string name="resolution">Resolution :</string>
     
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <string name="settings_gps_title">Réglages itinéraires</string>
-	<string name="settings_gps_interval_title">Temps minimum</string>
+    <string name="settings_gps">Réglages itinéraires</string>
+	<string name="settings_gps_interval">Temps minimum</string>
 	<string name="settings_gps_interval_summary">Temps minimum entre deux captures de position GPS (en seconde)</string>
 	<string name="settings_gps_interval_dialog">Temps minimum entre deux captures de position GPS (en seconde)</string>
-	<string name="settings_gps_distance_title">Distance minimum</string>
+	<string name="settings_gps_distance">Distance minimum</string>
 	<string name="settings_gps_distance_summary">Distance minimum entre deux captures de position GPS (en mètre)</string>
 	<string name="settings_gps_distance_dialog">Distance minimum entre deux captures de position GPS (en mètre)</string>
-	<string name="settings_gps_network_title">Utilisation les réseaux</string>
+	<string name="settings_gps_network">Utilisation les réseaux</string>
 	<string name="settings_gps_network_summary">Utiliser les réseaux (cellulaire et wifi) pour localiser l\'appareil si aucune position GPS n\'est trouvée</string>
-	<string name="settings_gps_notif_title">Autoriser les notifications</string>
+	<string name="settings_gps_notif">Autoriser les notifications</string>
 	<string name="settings_gps_notif_summary">Utiliser les notifications :</string>
-    
+	<string name="settings_gpx">Réglages métadonnées GPX</string>
+    <string name="settings_user_name">Nom des itinéraire</string>
+    <string name="settings_user_name_summary"></string>
+    <string name="settings_user_name_dialog"></string>
+    <string name="settings_user_email"></string>
+    <string name="settings_user_email_summary"></string>
+    <string name="settings_user_email_dialog"></string>
+    <string name="settings_track_default_name"></string>
+    <string name="settings_track_default_name_summary"></string>
+    <string name="settings_track_default_name_dialog"></string>
+    <string name="settings_track_default_desc"></string>
+    <string name="settings_track_default_desc_summary"></string>
+    <string name="settings_track_default_desc_dialog"></string>
+    <string name="settings_track_default_keywords"></string>
+    <string name="settings_track_default_keywords_summary"></string>
+    <string name="settings_track_default_keywords_dialog"></string>
+    <string name="settings_files"></string>
+	
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ GPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<string name="button_tracking_off">Enregistrer les déplacements</string>
 	<string name="button_tracking_on">Arrêter l\'enregistrement</string>
