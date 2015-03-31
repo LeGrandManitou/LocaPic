@@ -6,25 +6,32 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.animation.RotateAnimation;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 import android.widget.TextView;
 import fr.rt.acy.locapic.R;
+import fr.rt.acy.locapic.camera.CameraActivity.Orientation;
 
 /**
  * Popup avec parametre rapide (flash ...)
  */
 public class FastSettingsActivity extends Activity
 {
+	// taille du popup
+	private final int WIDTH = 400;
+	private final int HEIGHT = 300;
+	
 	// Mode de flash : ON, OFF ou AUTO
 	private Flash flashMode = Flash.AUTO;
 	// Retardateur en seconde
 	private int retardateur = 0;
-	
+	// resolution de camera supporté par la camera
 	private ArrayList<CameraSize> supportedPictureSizes = new ArrayList<>();
 	private int indexCameraSizeSelected = 0;
 	
@@ -46,10 +53,15 @@ public class FastSettingsActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_fast_settings);
 		
-		// initialiser flash et retardateur
+		// initialiser flash, retardateur et resolution
 		flashMode = (Flash) getIntent().getExtras().get("flashMode");
 		retardateur = getIntent().getExtras().getInt("retardateur");
 		indexCameraSizeSelected = getIntent().getIntExtra("indexCameraSizeSelected", 0);
+		LinearLayout fastSettingsLayout = (LinearLayout) findViewById(R.id.fastSettingsAll);
+		
+		// orientation du telephone
+		Orientation orientation = Orientation.PORTRAIT;
+		orientation = (Orientation) getIntent().getSerializableExtra("orientation"); // une enumeration est serialisable
 		
 		int[] tmpSizes = getIntent().getIntArrayExtra("supportedPictureSizes");
 		
@@ -125,6 +137,19 @@ public class FastSettingsActivity extends Activity
 		
 		returnIntent = new Intent();
 		setReturnData();
+		
+		if (orientation == Orientation.PORTRAIT)
+		{
+			fastSettingsLayout.getLayoutParams().width = WIDTH;
+			fastSettingsLayout.getLayoutParams().height = HEIGHT;
+		}
+		else
+		{
+			fastSettingsLayout.getLayoutParams().width = WIDTH;
+			fastSettingsLayout.getLayoutParams().height = WIDTH;
+			fastSettingsLayout.setRotation(orientation.getRotation());
+		}
+		fastSettingsLayout.requestLayout();
 	}
 	
 	/**

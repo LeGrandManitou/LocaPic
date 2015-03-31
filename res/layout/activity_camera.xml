@@ -42,7 +42,7 @@
                 android:id="@+id/prendrePhoto"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:src="@drawable/ic_action_camera"
+                android:src="@drawable/aperture"
                 android:layout_gravity="center_horizontal"
                 android:minWidth="50dp"
                 android:contentDescription="@string/takePicture"

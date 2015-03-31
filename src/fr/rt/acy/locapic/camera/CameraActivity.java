@@ -85,7 +85,7 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private Flash flashMode = Flash.AUTO;   	// Mode du flash et valeur par defaut
 	private int retardateur = 0;            	// Retardateur en secondes (0 par defaut)
 	private List<Size> supportedPictureSizes; 	// Taille de l'appareil photo supporte
-	private int indexCameraSizeSelected = 0;	// index dans supportedPictureSizes de la taille selectionné
+	private int indexCameraSizeSelected = 1;	// index dans supportedPictureSizes de la taille selectionné
 	
 	// Multitouch
 	// CoordonnÃ©es du pointeur initial
@@ -196,7 +196,6 @@ public class CameraActivity extends Activity implements SensorEventListener
         // Commencer l'ecoute des capteurs
     	sensorManager.registerListener( this, accelSensor, SensorManager.SENSOR_DELAY_NORMAL);
     	sensorManager.registerListener( this, magnSensor, SensorManager.SENSOR_DELAY_NORMAL);
-    	
     }
     
     @Override
@@ -255,6 +254,7 @@ public class CameraActivity extends Activity implements SensorEventListener
     		
     		camera.setParameters(param);
     	}
+    	
     	super.onActivityResult(requestCode, resultCode, data);
     }
     
@@ -569,9 +569,9 @@ public class CameraActivity extends Activity implements SensorEventListener
         Log.v(TAG, "rotateScreen -> " + orientation);
         
         int rotation = orientation.getRotation();
-        prendrePhotoButton.setRotation(rotation);
-        fastSettingsButton.setRotation(rotation);
-        retourButton.setRotation(rotation);
+        //prendrePhotoButton.setRotation(rotation);
+        //fastSettingsButton.setRotation(rotation);
+        //retourButton.setRotation(rotation);
     }
     
     private void setZoom(int zoom)
@@ -611,7 +611,7 @@ public class CameraActivity extends Activity implements SensorEventListener
 		}
 		fastSettingsIntent.putExtra("supportedPictureSizes", sizes);
 		fastSettingsIntent.putExtra("indexCameraSizeSelected", indexCameraSizeSelected);
-
+		fastSettingsIntent.putExtra("orientation", orientationEcran);
         startActivityForResult(fastSettingsIntent, REQUEST_CODE_POPUP_FAST_SETTINGS);
     }
 
