@@ -2,39 +2,39 @@
         xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
-            android:title="GPS Settings">
+            android:title="@string/settings_gps">
 
         <EditTextPreference
             	android:id="@+id/settings_locInt"
                 android:key="LOCATION_INTERVAL"
-                android:title="Minimum time"
+                android:title="@string/settings_gps_interval"
                 android:inputType="number" 
-                android:summary="Minimum time between each point (in seconds)"
-                android:dialogTitle="Minimum time between each point (in seconds)" />
+                android:summary="@string/settings_gps_interval_summary"
+                android:dialogTitle="@string/settings_gps_interval_dialog" />
         
 		<EditTextPreference
 		    	android:id="@+id/settings_locDist"
                 android:key="LOCATION_DISTANCE"
-                android:title="Minimum distance"
+                android:title="@string/settings_gps_distance"
                 android:inputType="number" 
-                android:summary="Minimum distance between each point (in meter)"
-                android:dialogTitle="Minimum distance between each point (in meter)" />
+                android:summary="@string/settings_gps_distance_summary"
+                android:dialogTitle="@string/settings_gps_distance_dialog" />
 		
         <CheckBoxPreference
             	android:id="@+id/settings_useNetwork"
                 android:key="USE_NETWORK_LOCATION_PROVIDER"
-                android:title="Use network location provider"
-                android:summary="Use network location provider if no GPS location is found, less accurate" />
+                android:title="@string/settings_gps_network"
+                android:summary="@string/settings_gps_network_summary" />
 	
 		<!--CheckBoxPreference
                 android:key="ENABLE_NOTIFICATIONS"
-                android:title="Notification"
-                android:summary="Show notification when recording route" /-->
+                android:title="@string/settings_gps_notif"
+                android:summary="@string/settings_gps_notif_summary" /-->
 		
     </PreferenceCategory>  
 	
 	<PreferenceCategory
-            android:title="GPX Settings">
+            android:title="@string/settings_gpx">
 				
 			<EditTextPreference
 				android:id="@+id/settings_user_name"
