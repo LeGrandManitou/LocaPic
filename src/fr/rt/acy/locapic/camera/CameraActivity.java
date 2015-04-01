@@ -177,9 +177,10 @@ public class CameraActivity extends Activity implements SensorEventListener, Loc
     	
     	// Enregistrement de l'activite (qui implemente l'interface LocationListener) comme LocationListener
     	// Mise a jour de la position toutes les 30 secondes
+    	locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+    	pref = PreferenceManager.getDefaultSharedPreferences(this);
     	try {
     		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30000, 0, this, null);
-    		pref = PreferenceManager.getDefaultSharedPreferences(this);
     		if (pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false))
     			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000, 0, this, null);
     	} catch (Exception e) {
@@ -751,8 +752,8 @@ public class CameraActivity extends Activity implements SensorEventListener, Loc
     }
 
 	@Override
-	public void onLocationChanged(Location arg0) {
-		// TODO Auto-generated method stub
+	public void onLocationChanged(Location loc) {
+		// TODO Message pour dire que la loc est a jour (si y'a le temps)
 	}
 
 	@Override
