@@ -42,6 +42,8 @@ public class CameraActivity extends Activity implements SensorEventListener
 {
 	// tag pour debugage
 	private final static String TAG = CameraActivity.class.getName(); 
+	private final static String TAG_METADONNEES = "metadonnees"; 
+
 	// tag pour metadonnees exif. L'azimute et l'orientation y seront enregistres
 	public final static String TAG_USER_COMMENT = "UserComment";
 	// tag pour startActivityForResult
@@ -52,17 +54,17 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private String cheminPhoto = null;      // Chemin de la dernier photo enregistree
 	private Camera camera;                  // Camera utillisee
 	
-	// Boutons
+	/// Boutons ///
 	private PreviewCamera previewCamera;    // preview de la camera
 	private ImageButton fastSettingsButton; // bouton fastSettings (activation du flash, retardateur, ...)
 	private ImageButton prendrePhotoButton;	// bouton prendre une photo
 	private ImageButton retourButton;		// bouton retour au menu principal
-    private int maxZoom = 0;				// niveau de zoom maximum. Affecte dans le onCreate
-    private boolean isZoomSupported = false;
+    private int maxZoom = 0;				// niveau de zoom maximum. Initialisé dans le onCreate
+    private boolean isZoomSupported = false;// Le zoom est supporté (true) ou non (false)
     
     private Orientation orientationEcran = Orientation.PORTRAIT; // indique l'orientation (portrait ou paysage)
     
-	// Capteurs
+	/// Capteurs ///
 	private SensorManager sensorManager;    // gere les capteurs du telephone
 	private Sensor accelSensor;             // accelerometre
 	private Sensor magnSensor;              // capteur de champ magnetique(boussole)
@@ -87,44 +89,10 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private List<Size> supportedPictureSizes; 	// Taille de l'appareil photo supporte
 	private int indexCameraSizeSelected = 1;	// index dans supportedPictureSizes de la taille selectionn�
 	
-	// Multitouch
+	/// Multitouch ///
 	// Coordonnées du pointeur initial
 	private float downX;
 	private float downY;
-	
-	public enum Orientation 
-	{
-		PORTRAIT("Portrait", 90, 0), PAYSAGE_0("Paysage 0", 0, 90), PAYSAGE_180("Paysage 180", 180, -90);
-		
-		private String nom;
-		private int degree;
-		/* rotation a effectuer pour passer une View cr��e
-		 *  en paysage dans la nouvelle orientation d'ecran */
-		private int rotation;
-		
-		Orientation(String nom, int degree, int rotation)
-		{
-			this.nom = nom;
-			this.degree = degree;
-			this.rotation = rotation;
-		}
-		
-		@Override
-		public String toString() 
-		{
-			return nom;
-		}
-		
-		public int getDegree()
-		{
-			return degree;
-		}
-		
-		public int getRotation()
-		{
-			return rotation;
-		}
-	}
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) 
@@ -132,7 +100,8 @@ public class CameraActivity extends Activity implements SensorEventListener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
         
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE); //TODO ne fonctionne pas
+        //TODO ne fonctionne pas completement: ne masque pas completement la bar de bouton systeme
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE); 
 
         // On active la camera par defaut
         try 
@@ -149,20 +118,21 @@ public class CameraActivity extends Activity implements SensorEventListener
         Parameters params = camera.getParameters();
         params.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         maxZoom = params.getMaxZoom();                                  // Recuperer le zoom maximum
-        isZoomSupported = params.isZoomSupported();
+        isZoomSupported = params.isZoomSupported();						// Le zoom est il suporte ?
         supportedPictureSizes = params.getSupportedPictureSizes();		// Recuperer les taille de camera supporte
         camera.setParameters(params);
         
-        previewCamera = new PreviewCamera(this, camera);
+        previewCamera = new PreviewCamera(this, camera);	// Creation du preview
         previewCamera.setKeepScreenOn(true);                // Garder l'ecran allume
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(previewCamera);
+        preview.addView(previewCamera);						// affichage du preview
         
-        // Boutons
+        // Initialisation des variables des Boutons
         prendrePhotoButton = (ImageButton) findViewById(R.id.prendrePhoto);
         fastSettingsButton = (ImageButton) findViewById(R.id.fastSettings);
         retourButton = (ImageButton) findViewById(R.id.retour);
         
+        // listener des boutons
         prendrePhotoButton.setOnClickListener(new OnClickListener() 
         {
 			@Override
@@ -207,7 +177,7 @@ public class CameraActivity extends Activity implements SensorEventListener
     	{
     		try 
     		{
-    			camera.release(); // On libere la camera
+    			camera.release();	// On libere la camera
                 camera = null;
 			} 
     		catch (Exception e)
@@ -249,9 +219,10 @@ public class CameraActivity extends Activity implements SensorEventListener
 	    		// flash OFF
 	    		param.setFlashMode(Parameters.FLASH_MODE_OFF);
 	    	}
-    		
+    		// Changement de la resolution
     		param.setPictureSize(cameraSizeSelected.width, cameraSizeSelected.height);
     		
+    		// Aplication des nouveaux parametres
     		camera.setParameters(param);
     	}
     	
@@ -425,8 +396,8 @@ public class CameraActivity extends Activity implements SensorEventListener
 	}
     
 	/**
-	 * Retourne les es coordonn�es actuelle GPS au format DMS
-	 * @return Les coordonn�es actuelle GPS au format DMS. Le 1er element est la latitude. Le 2e la longitude
+	 * Retourne les es coordonnees actuelle GPS au format DMS
+	 * @return Les coordonnees actuelle GPS au format DMS. Le 1er element est la latitude. Le 2e la longitude
 	 */
 	private String[] getLastLoc()
 	{
@@ -440,7 +411,7 @@ public class CameraActivity extends Activity implements SensorEventListener
 			public void onProviderDisabled(String provider) {}
 			@Override
 			public void onLocationChanged(Location location) {}
-		}, null); // TODO bug
+		}, null);
     	Location loc = locationManager.getLastKnownLocation("gps");
     	double[] locDouble = {0, 0};
     	String[] locStr = {null, null};
@@ -458,12 +429,14 @@ public class CameraActivity extends Activity implements SensorEventListener
     	return locStr;
     }
     
+	/**
+	 * @return Le niveau de zoom maximum supporte par la camera. Retourne -1 si la camera ne supporte pas le zoom
+	 */
     private int getMaxZoom() 
     {
     	if (isZoomSupported)
         {
-    		Camera.Parameters parameters = camera.getParameters();
-    		return parameters.getMaxZoom();
+    		return camera.getParameters().getMaxZoom();
         }
         else
         {
@@ -472,6 +445,9 @@ public class CameraActivity extends Activity implements SensorEventListener
         }
 	}
     
+	/**
+	 * @return Le niveau de zoom actuel de la camera. Retourne -1 si la camera ne supporte pas le zoom
+	 */
     private int getZoom()
     {
     	if (isZoomSupported)
@@ -515,7 +491,7 @@ public class CameraActivity extends Activity implements SensorEventListener
         });
     }
 
-    //TODO BUG: apres 2 prises de photos,impossble d'en reprendre une nouvelle, seulement sur galaxy S4.
+    //TODO BUG: apres 2 prises de photos,impossble d'en reprendre une nouvelle. Seulement sur galaxy S4.
     // Enregistrement de la photo. Appelle lors de takePicture(null, null, pictureCallback)
     private PictureCallback pictureCallback = new PictureCallback()
     {
@@ -556,33 +532,59 @@ public class CameraActivity extends Activity implements SensorEventListener
                 Log.v(TAG, "Erreur lors de la creation du fichier");
             }
 
-            // On redemarre le preview apres un courte pause
-            //pour permetre de voir la photo prise
+            /* On redemarre le preview apres un courte pause
+             * pour permetre de voir la photo prise*/
             SystemClock.sleep(pauseEntrePhoto); // on marque une pause
-            //camera.startPreview(); // On redemarre le preview
             resetCamera(camera);    // On redemarre le preview
         }
     };
     
+    /**
+     * Redemarre la camera en reinitialisant l'auto focus
+     * @param camera la camera a redemarrer
+     */
+    private void resetCamera(Camera camera)
+    {
+        Log.v(TAG, "ResetCamera ...");
+
+        Parameters params = camera.getParameters();
+        params.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        camera.setParameters(params);
+        camera.startPreview(); // On redemarre le preview
+    }
+    
+    /**
+     * Tourne les bouton de l'ecran
+     */
     private void rotateScreen(Orientation orientation)
     {
-        Log.v(TAG, "rotateScreen -> " + orientation);
+        //Log.v(TAG, "rotateScreen -> " + orientation);
         
-        int rotation = orientation.getRotation();
+        //int rotation = orientation.getRotation();
         //prendrePhotoButton.setRotation(rotation);
         //fastSettingsButton.setRotation(rotation);
         //retourButton.setRotation(rotation);
     }
     
+    /**
+     * @param zoom le niveau de zoom a affecte a la camera
+     */
     private void setZoom(int zoom)
     {
+    	// Si le zoom est supporte par le telephone :
     	if (isZoomSupported)
         {
-    		if (zoom >= maxZoom)
+    		// Empecher le niveau de zoom de depasser le maximum et le minimum
+    		if (zoom > maxZoom)
     		{
     			zoom = maxZoom;
     		}
+    		else if (zoom < 0)
+    		{
+    			zoom = 0;
+    		}
 
+    		// Affectation du nouveau niveau de zoom a la camera
 			Camera.Parameters params = camera.getParameters();
     		params.setZoom(zoom);
     		camera.setParameters(params);
@@ -594,15 +596,19 @@ public class CameraActivity extends Activity implements SensorEventListener
     }
 
     /**
-     * Affiche la boite de dialogue permetent de modifier les parametres de base
+     * Affiche la boite de dialogue permettent de modifier les parametres de base de la camera (flash, retardateur, ...)
      */
-    private void showFastSettingsDialog() //TODO selection de la scene
+    private void showFastSettingsDialog()
     {
         Intent fastSettingsIntent = new Intent(this, FastSettingsActivity.class);
+        
         // On passe la valeur actuel des parametres en extra
+        // Flash
         fastSettingsIntent.putExtra("flashMode", flashMode);
+        // Retardateur
         fastSettingsIntent.putExtra("retardateur", retardateur);
 		
+        // Resolution suporte par la camera
 		int[] sizes = new int[supportedPictureSizes.size()*2];
 		for (int i = 0; i < supportedPictureSizes.size(); i+=2) 
 		{
@@ -610,13 +616,18 @@ public class CameraActivity extends Activity implements SensorEventListener
 			sizes[i+1] = supportedPictureSizes.get(i).height;
 		}
 		fastSettingsIntent.putExtra("supportedPictureSizes", sizes);
+		
+		// Index de la resolution actiellement selectionne
 		fastSettingsIntent.putExtra("indexCameraSizeSelected", indexCameraSizeSelected);
+		// Orientation actuel du telephone
 		fastSettingsIntent.putExtra("orientation", orientationEcran);
+		
+		// Demarrer le popup
         startActivityForResult(fastSettingsIntent, REQUEST_CODE_POPUP_FAST_SETTINGS);
     }
 
     /**
-     * ecrit les metadonnees dans la derniere photo prise
+     * Ecrit les metadonnees dans la derniere photo prise
      * @throws IOException
      */
     private void writeMetadata() throws IOException
@@ -651,12 +662,12 @@ public class CameraActivity extends Activity implements SensorEventListener
             
             if (Integer.valueOf(longitude.substring(0, longitude.indexOf("/"))) > 0)
             {
-            	// Si la longitude est superieur a 0, nous sommes a l'est du m�ridien de greenwich
+            	// Si la longitude est superieur a 0, nous sommes a l'est du meridien de greenwich
             	ei.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "E");
             }
             else
             {
-            	// sinon nous sommes a l'ouest du m�ridien de greenwich
+            	// sinon nous sommes a l'ouest du meridien de greenwich
             	ei.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "W");
             }
 
@@ -690,7 +701,7 @@ public class CameraActivity extends Activity implements SensorEventListener
      */
     private void readMetadata()
     {
-        Log.v(TAG, "Lecture des metadonnees ...");
+        Log.v(TAG_METADONNEES, "Lecture des metadonnees ...");
 
         File f = new File(cheminPhoto);
 
@@ -701,14 +712,14 @@ public class CameraActivity extends Activity implements SensorEventListener
             try
             {
                 ei = new ExifInterface(cheminPhoto);
-                Log.v(TAG, TAG_USER_COMMENT + " -> " + ei.getAttribute(TAG_USER_COMMENT));
+                Log.v(TAG_METADONNEES, TAG_USER_COMMENT + " -> " + ei.getAttribute(TAG_USER_COMMENT));
 
-                Log.v(TAG, ExifInterface.TAG_GPS_LATITUDE + " -> " + ei.getAttribute(ExifInterface.TAG_GPS_LATITUDE));
-                Log.v(TAG, ExifInterface.TAG_GPS_LONGITUDE + " -> " + ei.getAttribute(ExifInterface.TAG_GPS_LONGITUDE));
+                Log.v(TAG_METADONNEES, ExifInterface.TAG_GPS_LATITUDE + " -> " + ei.getAttribute(ExifInterface.TAG_GPS_LATITUDE));
+                Log.v(TAG_METADONNEES, ExifInterface.TAG_GPS_LONGITUDE + " -> " + ei.getAttribute(ExifInterface.TAG_GPS_LONGITUDE));
             }
             catch (IOException e)
             {
-                Log.e(TAG, "Erreur lecture metadonnees : " + e.getMessage());
+                Log.e(TAG_METADONNEES, "Erreur lecture metadonnees : " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -716,20 +727,6 @@ public class CameraActivity extends Activity implements SensorEventListener
         {
             Log.w(TAG, "Le fichier " + cheminPhoto + " n'existe pas. Impossible de creer les metadonnees.");
         }
-    }
-
-    /**
-     * Redemarre la camera en reinitialisant l'auto focus
-     * @param camera la camera a redemarrer
-     */
-    private void resetCamera(Camera camera)
-    {
-        Log.v(TAG, "ResetCamera ...");
-
-        Parameters params = camera.getParameters();
-        params.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-        camera.setParameters(params);
-        camera.startPreview(); // On redemarre le preview
     }
 
     @Override

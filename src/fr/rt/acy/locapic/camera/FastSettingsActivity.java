@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.view.animation.RotateAnimation;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
@@ -16,10 +15,9 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 import android.widget.TextView;
 import fr.rt.acy.locapic.R;
-import fr.rt.acy.locapic.camera.CameraActivity.Orientation;
 
 /**
- * Popup avec parametre rapide (flash ...)
+ * Popup avec parametre (flash, retardateur, resolution, ...)
  */
 public class FastSettingsActivity extends Activity
 {
@@ -31,20 +29,21 @@ public class FastSettingsActivity extends Activity
 	private Flash flashMode = Flash.AUTO;
 	// Retardateur en seconde
 	private int retardateur = 0;
-	// resolution de camera supporté par la camera
+	// resolution de camera supporte par la camera
 	private ArrayList<CameraSize> supportedPictureSizes = new ArrayList<>();
+	// index de la resolution actuelle de la photo dans le tableau supportedPictureSizes
 	private int indexCameraSizeSelected = 0;
 	
 	// Indique le reglage du retardateur
 	private TextView retardateurTexte;
 	// Bar selection du retardateur
 	private SeekBar seekBar;
-
+	// Menu deroulant selection du flash
 	private Spinner spinnerFlash;
+	// Menu deroulant selection de la resolution de la photo
 	private Spinner spinnerResolution;
 
-	
-	// Intent retourne a l'activite principal
+	// Intent pour retourne des variable a l'activite camera
 	private Intent returnIntent;
 	
 	@Override
@@ -53,6 +52,7 @@ public class FastSettingsActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_fast_settings);
 		
+		/// Recuperation valeur passe en parametre a l'activite ///
 		// initialiser flash, retardateur et resolution
 		flashMode = (Flash) getIntent().getExtras().get("flashMode");
 		retardateur = getIntent().getExtras().getInt("retardateur");
@@ -63,6 +63,7 @@ public class FastSettingsActivity extends Activity
 		Orientation orientation = Orientation.PORTRAIT;
 		orientation = (Orientation) getIntent().getSerializableExtra("orientation"); // une enumeration est serialisable
 		
+		// Recuperation des resolution suporte par la camera
 		int[] tmpSizes = getIntent().getIntArrayExtra("supportedPictureSizes");
 		
 		for (int i = 0; i < tmpSizes.length; i+=2) 
@@ -75,18 +76,21 @@ public class FastSettingsActivity extends Activity
 		retardateurTexte = (TextView) findViewById(R.id.retardateurText);
 		retardateurTexte.setText(String.valueOf(retardateur) + " sec");
 		
+		/// Creation des listes deroulante ///
 		spinnerFlash = (Spinner) findViewById(R.id.spinnerFlash);
 		spinnerResolution = (Spinner) findViewById(R.id.spinnerResolution);
 		
+		// Spinner flash
 		ArrayAdapter<CharSequence> arrayAdapter = ArrayAdapter.createFromResource(this, R.array.flashMode, android.R.layout.simple_spinner_item);
 		arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinnerFlash.setAdapter(arrayAdapter);
-		spinnerFlash.setSelection(flashMode.getIndex());
+		spinnerFlash.setSelection(flashMode.getIndex()); // Element de la liste selectionne
 		spinnerFlash.setOnItemSelectedListener(new OnItemSelectedListener() 
 		{
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) 
 			{
+				// Lorsque l'on selectionne un mode de flash, enregistrer le mode de flash
 				if(position == Flash.AUTO.getIndex())
 					flashMode = Flash.AUTO;
 				else if(position == Flash.ON.getIndex())
@@ -99,15 +103,17 @@ public class FastSettingsActivity extends Activity
 			}
 		});
 		
+		// Spinner resolution
 		ArrayAdapter<CameraSize> arrayAdapter2 = new ArrayAdapter<>(this,
 								android.R.layout.simple_spinner_item, supportedPictureSizes);
 		spinnerResolution.setAdapter(arrayAdapter2);
-		spinnerResolution.setSelection(indexCameraSizeSelected);
+		spinnerResolution.setSelection(indexCameraSizeSelected); // Element de la liste selectionne
 		spinnerResolution.setOnItemSelectedListener(new OnItemSelectedListener() 
 		{
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) 
 			{
+				// Lorsque l'on selectionne un element, enregistrer son indice dans une variable
 				indexCameraSizeSelected = position;
 			}
 			@Override
@@ -115,9 +121,9 @@ public class FastSettingsActivity extends Activity
 			}
 		});
 		
-		
+		// seekBar (utiliser pour la selection du retardateur)
 		seekBar = (SeekBar) findViewById(R.id.retardateur);
-		// listener du seekBar
+		// Sistener du seekBar
 		seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() 
 		{
 			@Override
@@ -127,7 +133,7 @@ public class FastSettingsActivity extends Activity
 			@Override
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) 
 			{
-				retardateurTexte.setText(String.valueOf(progress) + " sec");
+				retardateurTexte.setText("+" + String.valueOf(progress) + " sec");
 				retardateur = progress;
 			}
 		});
@@ -135,21 +141,27 @@ public class FastSettingsActivity extends Activity
 		// on initialise la valeur par defaut du seekbar
 		seekBar.setProgress(retardateur);
 		
+		/// Valeur a retourner a l'activite camera
 		returnIntent = new Intent();
 		setReturnData();
 		
+		// Recuperation de l'orientation du telephone qui a ete passe en parametre
 		if (orientation == Orientation.PORTRAIT)
 		{
+			// affectation au layout de la taille desire
 			fastSettingsLayout.getLayoutParams().width = WIDTH;
 			fastSettingsLayout.getLayoutParams().height = HEIGHT;
 		}
 		else
 		{
+			// affectation au layout de la taille desire
 			fastSettingsLayout.getLayoutParams().width = WIDTH;
 			fastSettingsLayout.getLayoutParams().height = WIDTH;
+			
+			// Retouner le layout
 			fastSettingsLayout.setRotation(orientation.getRotation());
 		}
-		fastSettingsLayout.requestLayout();
+		fastSettingsLayout.requestLayout(); // TODO verifier utilite
 	}
 	
 	/**

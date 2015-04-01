@@ -1,5 +1,8 @@
 package fr.rt.acy.locapic.camera;
 
+/**
+ * Mode de declanchement du flash de l'apareil photo : automatique, allume ou eteint
+ */
 public enum Flash 
 {
 	AUTO("AUTO", 0), ON("ON", 1), OFF("OFF", 2);
