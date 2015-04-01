@@ -2,8 +2,8 @@
 <resources>
     
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ App ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<string name="desc_camera_eng">Camera logo, used to launch camera</string>
-	<string name="desc_gps_eng">GPS point logo, used to launch GPS tracking</string>
+	<string name="desc_camera">Camera logo, used to launch camera</string>
+	<string name="desc_gps">GPS point logo, used to launch GPS tracking</string>
 	
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Camera ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	    

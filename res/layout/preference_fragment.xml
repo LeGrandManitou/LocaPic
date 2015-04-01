@@ -37,44 +37,50 @@
             android:title="@string/settings_gpx">
 				
 			<EditTextPreference
-				android:id="@+id/settings_user_name"
+				android:id="@+id/settings_userName"
 			    android:key="AUTHORS_NAME"
-			    android:title="Your name for the GPX files"
+			    android:title="@string/settings_user_name"
 			    android:inputType="text" 
-			    android:summary="Your name"
-			    android:dialogTitle="Your name" />
+			    android:summary="@string/settings_user_name_summary"
+			    android:dialogTitle="@string/settings_user_name_dialog" />
             
 			<EditTextPreference
-				android:id="@+id/settings_user_email"
+				android:id="@+id/settings_userEmail"
 			    android:key="AUTHORS_EMAIL"
-			    android:title="Your email address for the GPX files"
+			    android:title="@string/settings_user_email"
 			    android:inputType="textEmailAddress" 
-			    android:summary="Your email address"
-			    android:dialogTitle="Your email address" />
+			    android:summary="@string/settings_user_email_summary"
+			    android:dialogTitle="@string/settings_user_email_dialog" />
 			
 			<EditTextPreference
-				android:id="@+id/settings_track_name"
+				android:id="@+id/settings_trackName"
 			    android:key="TRACK_NAME"
-			    android:title="The name for the gpx files"
+			    android:title="@string/settings_track_default_name"
 			    android:inputType="text" 
-			    android:summary="The name of the gpx files"
-			    android:dialogTitle="Metadata only" />
+			    android:summary="@string/settings_track_default_name_summary"
+			    android:dialogTitle="@string/settings_track_default_name_dialog" />
 			
 			<EditTextPreference
-				android:id="@+id/settings_track_desc"
+				android:id="@+id/settings_trackDesc"
 			    android:key="TRACK_DESC"
-			    android:title="The description of the gpx files"
+			    android:title="@string/settings_track_default_desc"
 			    android:inputType="text" 
-			    android:summary="The description of the gpx files"
-			    android:dialogTitle="Metadata" />
+			    android:summary="@string/settings_track_default_desc_summary"
+			    android:dialogTitle="@string/settings_track_default_desc_dialog" />
 			
 			<EditTextPreference
-				android:id="@+id/settings_track_keywords"
+				android:id="@+id/settings_trackKeywords"
 			    android:key="TRACK_KEYWORDS"
-			    android:title="The keywords for the gpx files"
+			    android:title="@string/settings_track_default_keywords"
 			    android:inputType="text" 
-			    android:summary="The keywords for the gpx files"
-			    android:dialogTitle="Metadata" />
+			    android:summary="@string/settings_track_default_keywords_summary"
+			    android:dialogTitle="@string/settings_track_default_keywords_dialog" />
 			
 	</PreferenceCategory>
+	
+	<!-- PreferenceCategory
+            android:title="@string/settings_files">
+			
+	</PreferenceCategory-->
+	
 </PreferenceScreen>
