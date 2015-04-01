@@ -23,7 +23,7 @@
     <string name="flashAuto">Auto Flash</string>
     <string name="retardateur">Timer</string>
     <string name="retardateur_temps_titre">Timer :</string>
-    <string name="zoom">Zoom</string>
+    <string name="retour">Retour</string>
 
     <string name="title_activity_take_picture" translatable="false">TakePictureActivity</string>
     <string name="title_activity_fast_settings" translatable="false">FastSettingsActivity</string>

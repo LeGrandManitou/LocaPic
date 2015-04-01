@@ -35,7 +35,7 @@
                 android:layout_width="wrap_content"
                 android:src="@drawable/ic_action_back"
                 android:layout_weight="1"
-                android:contentDescription="@string/zoom"
+                android:contentDescription="@string/retour"
                 style="?android:attr/buttonBarButtonStyle" />
 
             <ImageButton

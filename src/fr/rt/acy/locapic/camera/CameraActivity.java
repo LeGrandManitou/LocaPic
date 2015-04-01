@@ -55,8 +55,8 @@ public class CameraActivity extends Activity implements SensorEventListener
 	// Boutons
 	private PreviewCamera previewCamera;    // preview de la camera
 	private ImageButton fastSettingsButton; // bouton fastSettings (activation du flash, retardateur, ...)
-	private ImageButton prendrePhotoButton;
-	private ImageButton retourButton;
+	private ImageButton prendrePhotoButton;	// bouton prendre une photo
+	private ImageButton retourButton;		// bouton retour au menu principal
     private int maxZoom = 0;				// niveau de zoom maximum. Affecte dans le onCreate
     private boolean isZoomSupported = false;
     
@@ -85,7 +85,7 @@ public class CameraActivity extends Activity implements SensorEventListener
 	private Flash flashMode = Flash.AUTO;   	// Mode du flash et valeur par defaut
 	private int retardateur = 0;            	// Retardateur en secondes (0 par defaut)
 	private List<Size> supportedPictureSizes; 	// Taille de l'appareil photo supporte
-	private int indexCameraSizeSelected = 1;	// index dans supportedPictureSizes de la taille selectionné
+	private int indexCameraSizeSelected = 1;	// index dans supportedPictureSizes de la taille selectionnï¿½
 	
 	// Multitouch
 	// CoordonnÃ©es du pointeur initial
@@ -402,13 +402,13 @@ public class CameraActivity extends Activity implements SensorEventListener
     }
     
 	/**
-	 * Convertir des coordonnées GPS du format degres au format degres, minute, seconde (DMS)
-	 * @param loc Les coordonnées GPS a convertir
-	 * @return Les coordonnées GPS convertis
+	 * Convertir des coordonnï¿½es GPS du format degres au format degres, minute, seconde (DMS)
+	 * @param loc Les coordonnï¿½es GPS a convertir
+	 * @return Les coordonnï¿½es GPS convertis
 	 */
 	private String decimalDegreesToDMS(double loc) 
 	{
-		/*  Format des coordonnées GPS dans les metadonnées
+		/*  Format des coordonnï¿½es GPS dans les metadonnï¿½es
 		 * 	num1/denom1,num2/denom2,num3/denom3
 		 * 	num1/denom1 = degres
 		 *	num2/denom2 = minutes
@@ -425,8 +425,8 @@ public class CameraActivity extends Activity implements SensorEventListener
 	}
     
 	/**
-	 * Retourne les es coordonnées actuelle GPS au format DMS
-	 * @return Les coordonnées actuelle GPS au format DMS. Le 1er element est la latitude. Le 2e la longitude
+	 * Retourne les es coordonnï¿½es actuelle GPS au format DMS
+	 * @return Les coordonnï¿½es actuelle GPS au format DMS. Le 1er element est la latitude. Le 2e la longitude
 	 */
 	private String[] getLastLoc()
 	{
@@ -451,7 +451,7 @@ public class CameraActivity extends Activity implements SensorEventListener
     		locDouble[1] = loc.getLongitude();
     	}
     	
-    	// Convertir les coordonnées au bon format (degrees minutes seconde)
+    	// Convertir les coordonnï¿½es au bon format (degrees minutes seconde)
     	locStr[0] = String.valueOf(decimalDegreesToDMS(locDouble[0]));
     	locStr[1] = String.valueOf(decimalDegreesToDMS(locDouble[1]));
     	
@@ -515,7 +515,7 @@ public class CameraActivity extends Activity implements SensorEventListener
         });
     }
 
-    //TODO BUG: mode focus parfois non reinitialise apres prise de photo
+    //TODO BUG: apres 2 prises de photos,impossble d'en reprendre une nouvelle, seulement sur galaxy S4.
     // Enregistrement de la photo. Appelle lors de takePicture(null, null, pictureCallback)
     private PictureCallback pictureCallback = new PictureCallback()
     {
@@ -541,9 +541,9 @@ public class CameraActivity extends Activity implements SensorEventListener
                 {
                     // On ouvre le fichier de la photo
                     FileOutputStream fos = new FileOutputStream(photo);
-                    fos.write(data); // On ecrit la photo dans le fichier
-                    fos.close(); // On ferme le fichier
-                    writeMetadata(); // on ecrit les metadonnees
+                    fos.write(data); 	// On ecrit la photo dans le fichier
+                    fos.close(); 		// On ferme le fichier
+                    writeMetadata(); 	// on ecrit les metadonnees
                     Toast.makeText(getApplicationContext(), "Photo enregistre sous " + cheminPhoto , Toast.LENGTH_LONG).show();
                 }
                 catch (IOException e)
@@ -651,12 +651,12 @@ public class CameraActivity extends Activity implements SensorEventListener
             
             if (Integer.valueOf(longitude.substring(0, longitude.indexOf("/"))) > 0)
             {
-            	// Si la longitude est superieur a 0, nous sommes a l'est du méridien de greenwich
+            	// Si la longitude est superieur a 0, nous sommes a l'est du mï¿½ridien de greenwich
             	ei.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "E");
             }
             else
             {
-            	// sinon nous sommes a l'ouest du méridien de greenwich
+            	// sinon nous sommes a l'ouest du mï¿½ridien de greenwich
             	ei.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "W");
             }
 
