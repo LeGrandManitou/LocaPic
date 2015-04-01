@@ -72,6 +72,9 @@
 	<string name="toast_gps_off">Vous devez activer le GPS pour enregistrer un itineraire.</string>
 	<string name="toast_tracking_launched">Début de l\'enregistrement de la trace gps...</string>
 	<string name="toast_tracking_stopped">Fin de l\'enregistrement de la trace gps...</string>
+	<string name="toast_gps_waiting">En attente des données de localisation...</string>
+	<string name="toast_loc_gps_found">Position GPS trouvé</string>
+	<string name="toast_loc_network_found">Position trouvé par les réseaux</string>
 	<!--string name="toast_tracking_launched">Enregistrement lancé vers le fichier : </string-->
 	<string name="notif_ticker">Début de l\'enregistrement de la trace gps...</string>
 	<string name="notif_title">LocaPic vous suit</string>

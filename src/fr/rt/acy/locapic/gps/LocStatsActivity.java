@@ -99,11 +99,12 @@ public class LocStatsActivity extends Activity implements LocationListener, Nmea
 					// Demande d'update unique de la position et d'ecoute des chaines NMEA
 					lm.requestSingleUpdate(LocationManager.GPS_PROVIDER, LocStatsActivity.this, null);
 					lm.addNmeaListener(LocStatsActivity.this);
-				}
+				} else if(!pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false))
+					Toast.makeText(getApplicationContext(), R.string.toast_gps_off, Toast.LENGTH_SHORT).show();
 				if(pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false))
 					lm.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, LocStatsActivity.this, null);
 				if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false))
-					Toast.makeText(getApplicationContext(), "En attente des donnees de localisation...", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), R.string.toast_gps_waiting, Toast.LENGTH_SHORT).show();
 			}
 		});
 	}
@@ -129,7 +130,7 @@ public class LocStatsActivity extends Activity implements LocationListener, Nmea
 		    	Log.v(TAG, "uiUpdateCallback");
 		    	Bundle data = intent.getExtras();
 		    	refreshUi(data);
-		    }     
+		    }
 		});
 		IntentFilter intentFilter = new IntentFilter();
 		intentFilter.addAction(TrackService.INTENT_ACTION);
@@ -158,6 +159,10 @@ public class LocStatsActivity extends Activity implements LocationListener, Nmea
 
 	@Override
 	public void onLocationChanged(Location loc) {
+		if(loc.getProvider().equals(LocationManager.GPS_PROVIDER))
+			Toast.makeText(this, R.string.toast_loc_gps_found, Toast.LENGTH_LONG).show();
+		else
+			Toast.makeText(this, R.string.toast_loc_network_found, Toast.LENGTH_LONG).show();
 		if(loc != null) {
 			String pdop = "";
 			String hdop = "";
@@ -191,8 +196,10 @@ public class LocStatsActivity extends Activity implements LocationListener, Nmea
 			refreshUi(locData);
 		}
 		// Arret des listeners
-		lm.removeUpdates(LocStatsActivity.this);
-		lm.removeNmeaListener(LocStatsActivity.this);
+		if (loc.getProvider().equals(LocationManager.GPS_PROVIDER)) {
+			lm.removeUpdates(LocStatsActivity.this);
+			lm.removeNmeaListener(LocStatsActivity.this);
+		}
 	}
 
 	@Override

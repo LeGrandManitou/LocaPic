@@ -12,6 +12,7 @@ import java.util.Locale;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
@@ -27,6 +28,7 @@ import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -38,7 +40,7 @@ import fr.rt.acy.locapic.R;
 
 //on supprime les warnings a cause de la classe Camera depreciee a partir de l'api 21
 @SuppressWarnings("deprecation")
-public class CameraActivity extends Activity implements SensorEventListener
+public class CameraActivity extends Activity implements SensorEventListener, LocationListener
 {
 	// tag pour debugage
 	private final static String TAG = CameraActivity.class.getName(); 
@@ -72,6 +74,12 @@ public class CameraActivity extends Activity implements SensorEventListener
 	// Vecteur utillise par getRotationMatrix dans onSensorChanged pour obtenir une matrisse de rotation.
 	private float[] accelVector = new float[3]; // vecteur gravite
 	private float[] magnVector = new float[3]; 	// vecteur champ magnetique
+	
+	// LocationManager pour les mises a jours de position
+	private LocationManager locationManager;
+	// Pour recuperer les preferences utilisateurs
+	// (utilise pour savoir si utilisation du provider NETWORK ou non pour la geolocalisation)
+	private SharedPreferences pref;
 	
 	/*
 	 * Orientation du telephone en degree. De 0 a 180 -> 90 = telephone vertical, 
@@ -166,6 +174,17 @@ public class CameraActivity extends Activity implements SensorEventListener
         // Commencer l'ecoute des capteurs
     	sensorManager.registerListener( this, accelSensor, SensorManager.SENSOR_DELAY_NORMAL);
     	sensorManager.registerListener( this, magnSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    	
+    	// Enregistrement de l'activite (qui implemente l'interface LocationListener) comme LocationListener
+    	// Mise a jour de la position toutes les 30 secondes
+    	try {
+    		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30000, 0, this, null);
+    		pref = PreferenceManager.getDefaultSharedPreferences(this);
+    		if (pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false))
+    			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000, 0, this, null);
+    	} catch (Exception e) {
+    		Log.e(TAG, e.getLocalizedMessage());
+    	}
     }
     
     @Override
@@ -373,9 +392,9 @@ public class CameraActivity extends Activity implements SensorEventListener
     }
     
 	/**
-	 * Convertir des coordonn�es GPS du format degres au format degres, minute, seconde (DMS)
-	 * @param loc Les coordonn�es GPS a convertir
-	 * @return Les coordonn�es GPS convertis
+	 * Convertir des coordonnees GPS du format degres au format degres, minute, seconde (DMS)
+	 * @param loc Les coordonnees GPS a convertir
+	 * @return Les coordonnees GPS convertis
 	 */
 	private String decimalDegreesToDMS(double loc) 
 	{
@@ -401,17 +420,6 @@ public class CameraActivity extends Activity implements SensorEventListener
 	 */
 	private String[] getLastLoc()
 	{
-    	LocationManager locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-    	locationManager.requestSingleUpdate("gps", new LocationListener() {
-			@Override
-			public void onStatusChanged(String provider, int status, Bundle extras) {}
-			@Override
-			public void onProviderEnabled(String provider) {}
-			@Override
-			public void onProviderDisabled(String provider) {}
-			@Override
-			public void onLocationChanged(Location location) {}
-		}, null);
     	Location loc = locationManager.getLastKnownLocation("gps");
     	double[] locDouble = {0, 0};
     	String[] locStr = {null, null};
@@ -467,6 +475,13 @@ public class CameraActivity extends Activity implements SensorEventListener
      */
     private void prendrePhoto()
     {
+    	try {
+    		locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this, null);
+	    	if (pref.getBoolean("USE_NETWORK_LOCATION_PROVIDER", false))
+	    		locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, this, null);
+    	} catch (Exception e) {
+    		Log.e(TAG, e.getLocalizedMessage());
+    	}
         if(retardateur > 0)
         {
         	//Toast.makeText(this, "Retardateur : " + String.valueOf(retardateur * 1000) + " seconde", Toast.LENGTH_LONG).show();
@@ -641,7 +656,7 @@ public class CameraActivity extends Activity implements SensorEventListener
             // on recupere les metaDonnees exif
             ExifInterface ei = new ExifInterface(cheminPhoto);
             
-            /// GPS /// //TODO gps ne marche pas !
+            /// GPS ///
             String[] loc = getLastLoc();
             String latitude = loc[0];
             String longitude = loc[1];
@@ -734,4 +749,18 @@ public class CameraActivity extends Activity implements SensorEventListener
     {
 
     }
+
+	@Override
+	public void onLocationChanged(Location arg0) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void onProviderDisabled(String arg0) {}
+
+	@Override
+	public void onProviderEnabled(String arg0) {}
+
+	@Override
+	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {}
 }
