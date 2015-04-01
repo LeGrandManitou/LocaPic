@@ -1,6 +1,7 @@
 package fr.rt.acy.locapic.gps;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -23,8 +24,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import fr.rt.acy.locapic.*;
-import fr.rt.acy.locapic.gps.DataReceiver.UiUpdater;
-
 
 public class LocStatsActivity extends Activity implements LocationListener, NmeaListener
 {
@@ -32,7 +31,7 @@ public class LocStatsActivity extends Activity implements LocationListener, Nmea
 	private DataReceiver dataReceiver;
 	private LocationManager lm;
 	private SharedPreferences pref;
-	private String GSA = null;
+	private String GSA;
 	private TextView tv_locLat;
 	private TextView tv_locLon;
 	private TextView tv_locAlt;
@@ -124,14 +123,14 @@ public class LocStatsActivity extends Activity implements LocationListener, Nmea
 		super.onResume();
 		
 		/** Gestion du BroadcastReceiver pour l'affichage des infos provenant du Service */
-		dataReceiver = new DataReceiver(new UiUpdater() {
-		    @Override
-		    public void uiUpdateCallback(Intent intent) {
-		    	Log.v(TAG, "uiUpdateCallback");
+		dataReceiver = new DataReceiver() {
+			@Override
+			public void uiUpdateCallback(Intent intent) {
+				Log.v(TAG, "uiUpdateCallback");
 		    	Bundle data = intent.getExtras();
 		    	refreshUi(data);
-		    }
-		});
+			}
+		};
 		IntentFilter intentFilter = new IntentFilter();
 		intentFilter.addAction(TrackService.INTENT_ACTION);
 		registerReceiver(dataReceiver, intentFilter);
@@ -167,6 +166,7 @@ public class LocStatsActivity extends Activity implements LocationListener, Nmea
 			String pdop = "";
 			String hdop = "";
 			String vdop = "";
+			//Log.d(TAG, "Location received, NMEA : "+GSA);
 			if(GSA != null && loc.getProvider().equals(LocationManager.GPS_PROVIDER)) {
 				String[] gsarray = GSA.split(",");
 				pdop = gsarray[gsarray.length - 3];
@@ -176,10 +176,8 @@ public class LocStatsActivity extends Activity implements LocationListener, Nmea
 			// Formatage de la date et de l'heure
 			long locPosixTime = (long) loc.getTime();
 			Date locDate = new Date(locPosixTime);
-			SimpleDateFormat euDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.FRENCH);
-			SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.FRENCH);
-			euDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+1"));
-			timeFormat.setTimeZone(TimeZone.getTimeZone("GMT+1"));
+			SimpleDateFormat euDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+			SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 			String euDate = euDateFormat.format(locDate);
 			String time = timeFormat.format(locDate);
 			// Ajout des donnees a un bundle et lancement de refreshUi pour actualiser l'interface
@@ -195,26 +193,27 @@ public class LocStatsActivity extends Activity implements LocationListener, Nmea
 			locData.putString("LOC_PDOP", pdop);
 			refreshUi(locData);
 		}
-		// Arret des listeners
-		if (loc.getProvider().equals(LocationManager.GPS_PROVIDER)) {
+		// Arret des listeners si on recoit une position GPS (donc arret du listener utilisant le provider NETWORK
+		if (loc.getProvider().equals(LocationManager.GPS_PROVIDER) && lm != null) {
 			lm.removeUpdates(LocStatsActivity.this);
 			lm.removeNmeaListener(LocStatsActivity.this);
 		}
 	}
 
 	@Override
-	public void onProviderDisabled(String provider) { }
+	public void onProviderDisabled(String provider) {}
 
 	@Override
-	public void onProviderEnabled(String provider) { }
+	public void onProviderEnabled(String provider) {}
 
 	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) { }
+	public void onStatusChanged(String provider, int status, Bundle extras) {}
 
 	@Override
 	public void onNmeaReceived(long timestamp, String nmea) {
-		if(nmea.substring(0, 6).equals("$GPGSA")) {
+		if(nmea.substring(0, 6).equals("$GPGSA") && !nmea.split(",")[2].equals("1")) {
 			GSA = nmea;
+			//Log.v(TAG, "NMEA Received : "+GSA);
 		}		
 	}
 	

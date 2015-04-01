@@ -1,30 +1,14 @@
 package fr.rt.acy.locapic;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
-import fr.rt.acy.locapic.gps.DataReceiver.UiUpdater;
-import fr.rt.acy.locapic.gps.LocStatsActivity;
-import fr.rt.acy.locapic.gps.TrackService;
-import fr.rt.acy.locapic.gps.TrackStatsActivity;
+//import fr.rt.acy.locapic.gps.DataReceiver.UiUpdater;
 import fr.rt.acy.locapic.camera.CameraActivity;
-import android.app.ActionBar;
-import android.app.Activity;
 import android.app.TabActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.location.Criteria;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -32,13 +16,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.ActionMenuView;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
 import android.widget.Toast;
-import fr.rt.acy.locapic.gps.DataReceiver;
 
 public class MainActivity extends TabActivity 
 {

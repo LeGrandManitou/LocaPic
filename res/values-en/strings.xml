@@ -22,5 +22,6 @@
 	
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ GPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<string name="gpx_file_prefix">track</string>
+	<string name="gpx_dir">Tracks</string>
 	
 </resources>

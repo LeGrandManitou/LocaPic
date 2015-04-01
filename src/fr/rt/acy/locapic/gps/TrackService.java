@@ -72,9 +72,7 @@ public class TrackService extends Service implements android.location.LocationLi
 		Calendar calendar = Calendar.getInstance();
 		Date date = calendar.getTime();
 		// Format de la date
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss", Locale.FRENCH);
-		// Reglage de la timezone TODO Get timezone
-		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT+1"));
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss");
 		StringBuilder dateBuilder = new StringBuilder(dateFormat.format(date));
 		// Pour le format GPX, T apres la date et avant l'heure, et Z a la fin
 		dateBuilder.append("Z");
@@ -231,13 +229,11 @@ public class TrackService extends Service implements android.location.LocationLi
 		/**
 		 * Creation du contenu du fichier a partir de la base et ajout d'un "segment" de trace
 		 */
-		//int index = GPX_BASE.indexOf("</trk>", 0)-2;
-		//String gpxFile = new StringBuilder(GPX_BASE).insert(index, "\n\t\t<number>1</number>\n\t\t<trkseg>\n\t\t</trkseg>").toString();
 		
 		// Date actuelle
 		Date now = new Date();
 		// Format de la date
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd", Locale.FRENCH);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 		// Creation de la chaine de la date actuelle a partir de l'objet Date now et du format (SimpleDateFormat).
 		String dateNow = new String(sdf.format(now));
 		
@@ -323,10 +319,8 @@ public class TrackService extends Service implements android.location.LocationLi
 		 * Creation de la date
 		 */
 		long posixTime = (long) loc.getTime();
-		Date date = new Date(posixTime); /// *1000 pour passer le temps en millisecondes //*1000L ???
-		// TODO Get timezone
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss", Locale.FRENCH); /// Format de la date
-		sdf.setTimeZone(TimeZone.getTimeZone("GMT+1")); /// Give a timezone reference for formating
+		Date date = new Date(posixTime);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss"); // Format de la date
 		StringBuilder formattedDateBuilder = new StringBuilder(sdf.format(date));
 		formattedDateBuilder.append("Z");
 		formattedDateBuilder.insert(10, "T");
@@ -559,7 +553,7 @@ public class TrackService extends Service implements android.location.LocationLi
 	@Override
 	public void onNmeaReceived(long timestamp, String nmea) {
 		//Log.v(TAG, "NMEA beg :=> "+nmea.substring(0, 6));
-		if(nmea.substring(0, 6).equals("$GPGSA")) {
+		if(nmea.substring(0, 6).equals("$GPGSA") && !nmea.split(",")[2].equals("1")) {
 			GSA = nmea;
 		}		
 	}
@@ -581,10 +575,8 @@ public class TrackService extends Service implements android.location.LocationLi
 		/** Intent pour l'actualisation graphique */
 		long locPosixTime = (long) location.getTime();
 		Date locDate = new Date(locPosixTime);
-		SimpleDateFormat euDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.FRENCH);
-		SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.FRENCH);
-		euDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+1"));
-		timeFormat.setTimeZone(TimeZone.getTimeZone("GMT+1"));
+		SimpleDateFormat euDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+		SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 		String euDate = euDateFormat.format(locDate);
 		String time = timeFormat.format(locDate);
 		

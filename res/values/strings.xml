@@ -79,6 +79,7 @@
 	<string name="notif_ticker">Début de l\'enregistrement de la trace gps...</string>
 	<string name="notif_title">LocaPic vous suit</string>
 	<string name="notif_text">Vos déplacements sont enregistrés</string>
+	<string name="gpx_dir">Itinéraires</string>
 	<string name="gpx_file_prefix">trace</string>
 	
 </resources>
