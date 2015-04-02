@@ -21,9 +21,9 @@ import fr.rt.acy.locapic.R;
  */
 public class FastSettingsActivity extends Activity
 {
-	// taille du popup
-	private final int WIDTH = 400;
-	private final int HEIGHT = 300;
+	// taille du popup en dp
+	private final int WIDTH = 300;
+	private final int HEIGHT = 200;
 	
 	// Mode de flash : ON, OFF ou AUTO
 	private Flash flashMode = Flash.AUTO;
@@ -145,23 +145,37 @@ public class FastSettingsActivity extends Activity
 		returnIntent = new Intent();
 		setReturnData();
 		
+		int widthDp = dpsToPx(WIDTH);
+		int heightDp = dpsToPx(HEIGHT);
+
 		// Recuperation de l'orientation du telephone qui a ete passe en parametre
 		if (orientation == Orientation.PORTRAIT)
 		{
 			// affectation au layout de la taille desire
-			fastSettingsLayout.getLayoutParams().width = WIDTH;
-			fastSettingsLayout.getLayoutParams().height = HEIGHT;
+			fastSettingsLayout.getLayoutParams().width = widthDp;
+			fastSettingsLayout.getLayoutParams().height = heightDp;
 		}
 		else
 		{
 			// affectation au layout de la taille desire
-			fastSettingsLayout.getLayoutParams().width = WIDTH;
-			fastSettingsLayout.getLayoutParams().height = WIDTH;
+			fastSettingsLayout.getLayoutParams().width = widthDp;
+			fastSettingsLayout.getLayoutParams().height = widthDp;
 			
 			// Retouner le layout
 			fastSettingsLayout.setRotation(orientation.getRotation());
 		}
 		fastSettingsLayout.requestLayout(); // TODO verifier utilite
+	}
+	
+	/**
+	 * Convertir des dps en pixel
+	 * @param dps les dps a convertir
+	 * @return les dps en pixel
+	 */
+	private int dpsToPx(int dps)
+	{
+		final float scale = getApplicationContext().getResources().getDisplayMetrics().density;
+		return (int) (dps * scale + 0.5f);
 	}
 	
 	/**
