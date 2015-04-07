@@ -1,4 +1,3 @@
-
 package fr.rt.acy.locapic.camera;
 
 import java.io.File;
@@ -140,7 +139,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Loc
         fastSettingsButton = (ImageButton) findViewById(R.id.fastSettings);
         retourButton = (ImageButton) findViewById(R.id.retour);
         
-        // listener des boutons
+        /// listener des boutons ///
         prendrePhotoButton.setOnClickListener(new OnClickListener() 
         {
 			@Override
