@@ -43,20 +43,34 @@ public class TrackService extends Service implements android.location.LocationLi
 	/**
 	 * Attributs du service
 	 */
+	// TAG pour les logs
 	private static final String TAG = "trackService";
+	// LocationManager pour recuperer la position, enregistrer un ecouteur, etc...
 	private LocationManager locationManager = null;
+	// Intervalles de prises de position (en millisecondes et en metres)
 	private static int LOCATION_INTERVAL = 2000;
-	private static float LOCATION_DISTANCE = 0; //10f
+	private static float LOCATION_DISTANCE = 0;
+	// Variable de type entier pour des tests
 	private static int test = 0;
+	// Chaine GSA (pour les infos DOP)
 	private String GSA = null;
+	// SharedPreferences pour recuperer les preferences utilisateurs
 	private SharedPreferences pref;
+	// Editor pour editer les preferences utilisateurs
 	private SharedPreferences.Editor prefEditor;
+	// Espace de nom XML utilise par nos fichier GPX
 	private Namespace ns = Namespace.getNamespace("http://www.topografix.com/GPX/1/1");
+	// TRACKING pour savoir si on track ou pas
 	private static boolean TRACKING = false;
+	// Nom de notre nouveau fichier
 	private static String FILE_NAME;
-	private static boolean FILE_EXT = false;  
+	// Enregistrement sur media externe (carte SD), mis a true si ce dernier est disponible
+	private static boolean FILE_EXT = false;
+	// Notre repertoire sur le potentiel media externe
 	private final String EXT_FILES_DIR = Environment.getExternalStorageDirectory().getPath() + "/MyTracks/";
+	// Action de l'intent envoye pour l'interface graphique
 	public static final String INTENT_ACTION = "MY_ACTION";
+	
 	/**
 	 * Methode pour creer le document JDOM de base pour le fichier GPX
 	 * Prend en parametre des valeurs pour les metadonnees GPX (contenues dans la balise <metadata>)
@@ -81,7 +95,7 @@ public class TrackService extends Service implements android.location.LocationLi
 		String formattedDate = dateBuilder.toString();
 		Log.v(TAG, "TIME => "+formattedDate);
 		
-		/* Pour le reste */
+		/* Pour le reste des metadonnees perso */
 		String mailId;
 		String mailDomain;
 		if(name == null)
@@ -300,7 +314,9 @@ public class TrackService extends Service implements android.location.LocationLi
 	 * @return Element - element JDOM representant la position
 	 */
 	public Element createLocationElement(Location loc) {
+		// Creation de notre objet Element contenant notre nouvelle position
 		Element locElement = new Element("trkpt", ns);
+		// Ajout des attributs lattitude et longitude
 		locElement.setAttribute("lat", String.valueOf(loc.getLatitude()));
 		locElement.setAttribute("lon", String.valueOf(loc.getLongitude()));
 		
@@ -318,15 +334,23 @@ public class TrackService extends Service implements android.location.LocationLi
 		/*
 		 * Creation de la date
 		 */
+		// Recup de la date au format POSIX (millisecondes depuis 1970)
 		long posixTime = (long) loc.getTime();
+		// Creation d'un objet Date a partir du temps POSIX
 		Date date = new Date(posixTime);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss"); // Format de la date
+		// Creation d'un format de date
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss");
+		// Creation d'un StringBuilder a partir de notre format et de notre date
 		StringBuilder formattedDateBuilder = new StringBuilder(sdf.format(date));
-		formattedDateBuilder.append("Z");
+		// On ajoute 2 caractere au builder
+		formattedDateBuilder.append("Z"); // Z => indication de fuseau horaire // TODO verif
+		// T (pour Time), permet de couper la chaine entre la date et l'heure
 		formattedDateBuilder.insert(10, "T");
+		// Creation de la chaine a partir du Builder
 		String formattedDate = formattedDateBuilder.toString();
 		//Log.v(TAG, "TIME => "+formattedDate);
-		// Ajout de la date a l'element
+
+		// Ajout de la date (element XML)
 		Element locTime = new Element("time", ns);
 		locTime.setText(formattedDate);
 		locElement.addContent(locTime);
@@ -334,11 +358,13 @@ public class TrackService extends Service implements android.location.LocationLi
 		/*
 		 * gestion du fix et de la precision DOP (NMEA, $GPGSA)
 		 */
+		// Creation d'attributs de type Element, modifie ci apres
 		Element locFixElem = new Element("fix", ns);
 		Element locSats = new Element("sat", ns);
 		Element locHdop = new Element("hdop", ns);
 		Element locVdop = new Element("vdop", ns);
 		Element locPdop = new Element("pdop", ns);
+		// Creation d'attributs de type chaine pour les infos DOP
 		String pdop = "";
 		String hdop = "";
 		String vdop = "";
@@ -383,6 +409,7 @@ public class TrackService extends Service implements android.location.LocationLi
 				if(!pdop.equals("")) {
 					locPdop.setText(pdop);
 				} else {
+					// Si pas de PDOP mais qu'on a V et HDOP alors calcul de PDOP
 					double hdopv = Float.parseFloat(hdop);
 					double vdopv = Float.parseFloat(vdop);
 					locPdop.setText(String.valueOf(Math.sqrt(hdopv*hdopv+vdopv*vdopv)));
@@ -404,16 +431,21 @@ public class TrackService extends Service implements android.location.LocationLi
 		SAXBuilder saxBuilder = new SAXBuilder();
 		Document document = new Document(new Element("temp"));
 	    try {
-	    	// On creer un nouveau document JDOM avec en argument le fichier GPX
+	    	// On creer un nouveau document JDOM a partir du fichier GPX
 	    	if (!FILE_EXT)
 	    		document = saxBuilder.build(openFileInput(FILE_NAME));
 	    	else
 	    		document = saxBuilder.build(new FileInputStream(new File(EXT_FILES_DIR+FILE_NAME)));
 	        
+	    	// On recupere la racine du document
 	        Element racine = document.getRootElement();
+	        // A partir de la racine, on recupere les tracks (<trk>)
 		    List<Element> trkList = racine.getChildren("trk", ns);
+		    // A partir de la derniere track, on recupere les segments de track (<trkseg>)
 		    List<Element> trksegList = trkList.get(trkList.size()-1).getChildren("trkseg", ns);
+		    // On recupere le dernier segment de track (de la derniere track donc)
 		    Element trkseg = trksegList.get(trksegList.size()-1);
+		    // On y ajoute la nouvelle position (Element loc)
 		    trkseg.addContent(loc);
 	    } catch(Exception e) {
 	    	Log.e(TAG, e.getMessage());
@@ -456,19 +488,22 @@ public class TrackService extends Service implements android.location.LocationLi
 		/*
 		 * Partie Notification + foreground
 		 */
+		// Creation d'un pending intent pour le clique sur la notification
 		Intent notificationIntent = new Intent(this, fr.rt.acy.locapic.MainActivity.class);
 		notificationIntent.setAction("MainActivity");
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 		
+		// Creation de la notif avec ses differents texte, son icone et le pendingIntent
         Notification notif = new Notification.Builder(this)
-        .setTicker(getResources().getString(R.string.notif_ticker))
-        .setContentTitle(getResources().getString(R.string.notif_title))
-        .setContentText(getResources().getString(R.string.notif_text))
-        .setSmallIcon(R.drawable.ic_launcher)
-        .setContentIntent(pendingIntent)
+        .setTicker(getResources().getString(R.string.notif_ticker)) // Texte affiche a l'apparition de la notif
+        .setContentTitle(getResources().getString(R.string.notif_title)) // Titre de la notif
+        .setContentText(getResources().getString(R.string.notif_text)) // Description
+        .setSmallIcon(R.drawable.ic_launcher) // Icone de la notif
+        .setContentIntent(pendingIntent) // pendingIntent
         .setOngoing(true).getNotification();
         
+        // Lancement au premier plan du service avec une priorite de 2 et la notif creer precedemment 
         startForeground(2, notif);
 		/*
 		 * 
@@ -491,21 +526,28 @@ public class TrackService extends Service implements android.location.LocationLi
 		/**
 		 * Gestion de l'itineraire
 		 */
+		// Recuperation des preferences
 		pref = PreferenceManager.getDefaultSharedPreferences(this);
 		LOCATION_INTERVAL = Integer.parseInt(pref.getString("LOCATION_INTERVAL", "2"))*1000;
 		LOCATION_DISTANCE = Integer.parseInt(pref.getString("LOCATION_DISTANCE", "0"));
 		TRACKING = pref.getBoolean("TRACKING", true);
 		
+		// Creation du document avec la methdoe createGpxDocTree()
+		// En parametre son passe les preferences utilisateurs quand au metadonnees GPX
 		Document document = createGpxDocTree(pref.getString("TRACK_NAME", null),
 				pref.getString("TRACK_DESC", null),
 				pref.getString("AUTHORS_NAME", null),
 				pref.getString("AUTHORS_EMAIL", null),
 				pref.getString("TRACK_KEYWORDS", null));
+		// Enregistrement du fichier avec notre methode saveFile()
 		saveFile(document);
 		
+		// Initialisation de notre locationMonager (voir methode plus bas)
 		initializeLocationManager();
 		try {
+			// Demande d'updates aux intervalles recuperer dans les preferences (ou par defaut)
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,	this);//locationListeners
+			// Ajout d'un listener pour les chaines NMEA.
 			locationManager.addNmeaListener(this);
 		} catch (java.lang.SecurityException ex) {
 			Log.i(TAG, "fail to request location update, ignore", ex);
@@ -520,6 +562,7 @@ public class TrackService extends Service implements android.location.LocationLi
 		if (locationManager != null) {
 			//Log.v(TAG, "onDestroy => lm != null");
 			try {
+				// On enleve les listeners
 				locationManager.removeUpdates(this);
 				locationManager.removeNmeaListener(this);
 			} catch (Exception ex) {
@@ -528,20 +571,24 @@ public class TrackService extends Service implements android.location.LocationLi
 		} else
 			Log.w(TAG, "onDestroy => lm == null");
 		
+		// On met la preference TRACKING a false
 		TRACKING = false;
 		prefEditor = PreferenceManager.getDefaultSharedPreferences(this).edit();
 		prefEditor.putBoolean("TRACKING", TRACKING);
 		prefEditor.commit();
 		
+		// Petit toast pour l'utilisateur
 		Toast.makeText(this, R.string.toast_tracking_stopped, Toast.LENGTH_SHORT).show();
 		
 		super.onDestroy();
+		// Au cas ou...
 		stopSelf();
 	}
 	
 	private void initializeLocationManager() {
 		//Log.v(TAG, "initializeLocationManager");
 		if (locationManager == null) {
+			// Recuperation d'un locationManager donne par le systeme
 			locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 		}
 	}
@@ -553,6 +600,8 @@ public class TrackService extends Service implements android.location.LocationLi
 	@Override
 	public void onNmeaReceived(long timestamp, String nmea) {
 		//Log.v(TAG, "NMEA beg :=> "+nmea.substring(0, 6));
+		// Si la chaine est une chaine GSA ($GPGSA,...) et que son fix ne vaut pas 1 (donc 2 ou 3)
+		// Alors on garde la chaine dans l'attribut GSA du service
 		if(nmea.substring(0, 6).equals("$GPGSA") && !nmea.split(",")[2].equals("1")) {
 			GSA = nmea;
 		}		
@@ -573,25 +622,37 @@ public class TrackService extends Service implements android.location.LocationLi
 		}
 		
 		/** Intent pour l'actualisation graphique */
+		// Date de la position (format POSIX)
 		long locPosixTime = (long) location.getTime();
+		// Conversion vers objet de classe Date
 		Date locDate = new Date(locPosixTime);
+		// Format pour la date (pour l'interface)
 		SimpleDateFormat euDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+		// Format de l'heure
 		SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+		// Creation des chaines date et heure
 		String euDate = euDateFormat.format(locDate);
 		String time = timeFormat.format(locDate);
 		
+		// Creation de chaine modifie ci apres
 		String pdop = "";
 		String hdop = "";
 		String vdop = "";
+		// Si on a une chaine dans notre attribut de service, on prend les valeurs DOP
 		if(GSA != null) {
 			String[] gsarray = GSA.split(",");
 			pdop = gsarray[gsarray.length - 3];
 			hdop = gsarray[gsarray.length - 2];
+			// Recup du dernier champs auxquel on enleve les 5 derniers carac (etoile * + CRC de 2 carac + retour chariot de 2 carac (<CR><LF>))
 			vdop = gsarray[gsarray.length - 1].substring(0, gsarray[gsarray.length - 1].length() - 5);
 		}
 		
+		// Creation d'un intent et ajout des extras
+		// Les extras sont des donnees sur la nouvelle position pour mettre l'interface graphique a jour
 		Intent intent = new Intent();
+		// Notre action
 		intent.setAction(INTENT_ACTION);
+		// Ajout des extras
 		intent.putExtra("LOC_LAT", String.valueOf(location.getLatitude()))
 			.putExtra("LOC_LON", String.valueOf(location.getLongitude()))
 			.putExtra("LOC_ELE", String.valueOf(location.getAltitude()))
@@ -601,17 +662,21 @@ public class TrackService extends Service implements android.location.LocationLi
 			.putExtra("LOC_HDOP", hdop)
 			.putExtra("LOC_VDOP", vdop)
 			.putExtra("LOC_PDOP", pdop);
+		// On envoie l'intent en broadcast, pour tout le monde sur le systeme
 	    sendBroadcast(intent);
 	}
 
+	// Methode de l'interface LocationListener
 	@Override
 	public void onProviderDisabled(String provider) {
 	}
 
+	// Methode de l'interface LocationListener
 	@Override
 	public void onProviderEnabled(String provider) {
 	}
 
+	// Methode de l'interface LocationListener
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {
 	}
